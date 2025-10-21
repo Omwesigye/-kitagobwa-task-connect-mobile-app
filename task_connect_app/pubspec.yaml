@@ -1,0 +1,37 @@
+name: task_connect_app
+description: "A new Flutter project."
+
+environment:
+  sdk: ">=3.9.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  supabase_flutter: ^2.5.5
+  drift: ^2.22.0
+  provider: ^6.1.2
+  flutter_local_notifications: ^18.0.0
+  get: ^4.6.6
+  icons_plus: ^4.0.0
+  font_awesome_flutter: ^10.7.0
+  path: ^1.8.3
+  crypto: ^3.0.6
+  shared_preferences: ^2.1.1
+  sqflite: ^2.3.0
+  http: ^1.1.0 # <-- Added for HTTP requests
+  flutter_secure_storage: ^8.0.0 # <-- Added for token storage
+  intl: ^0.18.0
+  image_picker: ^0.8.7+5
+
+dev_dependencies:
+  drift_dev: ^2.22.0
+  build_runner: ^2.4.10
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/images/
+    - assets/icons/
