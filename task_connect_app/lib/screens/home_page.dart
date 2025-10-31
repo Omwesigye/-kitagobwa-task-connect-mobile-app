@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:task_connect_app/models/service_provider.dart';
+import 'package:task_connect_app/models/user.dart';
 import 'package:task_connect_app/screens/settings_screen.dart';
+import 'package:task_connect_app/screens/provider_list_screen.dart';
 import 'package:task_connect_app/services/api_service.dart';
 import 'package:task_connect_app/util/Service_card.dart';
 import 'package:task_connect_app/util/category_card.dart';
 
 class HomePage extends StatefulWidget {
   final VoidCallback? onNavigateToProviders;
-  const HomePage({super.key, this.onNavigateToProviders});
+  final int? userId;
+  const HomePage({super.key, this.onNavigateToProviders, this.userId});
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -15,12 +18,16 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   List<ServiceProviderModel> providers = [];
+  User? currentUser;
   bool isLoading = true;
+  bool isLoadingUser = true;
 
   @override
   void initState() {
     super.initState();
     _fetchProviders();
+    // Placeholder: mark user as loaded; wire up real profile fetch when available
+    isLoadingUser = false;
   }
 
   Future<void> _fetchProviders() async {
@@ -36,6 +43,16 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  // Navigate to category-filtered provider list (basic navigation)
+  void _openCategoryPage(BuildContext context, String category) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const ProviderListScreen(),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -45,7 +62,7 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       backgroundColor: colorScheme.surface,
       body: SafeArea(
-        child: isLoading
+        child: (isLoading || isLoadingUser)
             ? Center(child: CircularProgressIndicator(color: colorScheme.primary))
             : SingleChildScrollView(
                 child: Column(
@@ -65,7 +82,7 @@ class _HomePageState extends State<HomePage> {
                               ),
                               const SizedBox(height: 8),
                               Text(
-                                "john",
+                                (currentUser?.fullName.toLowerCase() ?? "user"),
                                 style: textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
                               ),
                             ],
@@ -233,18 +250,29 @@ class _HomePageState extends State<HomePage> {
                           CategoryCard(
                             iconImagePath: "assets/icons/providers.png",
                             categoryName: "service providers",
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const ProviderListScreen(),
+                                ),
+                              );
+                            },
                           ),
                           CategoryCard(
                             iconImagePath: "assets/icons/plumber.png",
                             categoryName: "plumbers",
+                            onTap: () => _openCategoryPage(context, "plumber"),
                           ),
                           CategoryCard(
                             iconImagePath: "assets/icons/electrician.png",
                             categoryName: "electricians",
+                            onTap: () => _openCategoryPage(context, "electrician"),
                           ),
                           CategoryCard(
                             iconImagePath: "assets/icons/cleaner.png",
                             categoryName: "cleaners",
+                            onTap: () => _openCategoryPage(context, "cleaner"),
                           ),
                         ],
                       ),
@@ -281,8 +309,13 @@ class _HomePageState extends State<HomePage> {
                         itemCount: providers.length,
                         itemBuilder: (context, index) {
                           final provider = providers[index];
+                          final List<dynamic> imagesList =
+                              (provider.images is List) ? (provider.images as List) : const [];
+                          final String imagePath = imagesList.isNotEmpty
+                              ? (imagesList[0]?.toString() ?? '')
+                              : '';
                           return ServiceCard(
-                            providerImagePath: provider.images.first,
+                            providerImagePath: imagePath,
                             name: provider.name ?? "Unknown",
                             service: provider.service.toString(),
                             rating: provider.rating.toString(),

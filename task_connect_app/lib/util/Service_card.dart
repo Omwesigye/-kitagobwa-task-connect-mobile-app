@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 
 class ServiceCard extends StatelessWidget {
   final String providerImagePath;
@@ -20,6 +21,14 @@ class ServiceCard extends StatelessWidget {
     final cardColor = theme.cardColor; // adapts to light/dark
     final textColor = theme.textTheme.bodyLarge?.color ?? Colors.black;
     final subTextColor = theme.textTheme.bodySmall?.color ?? Colors.grey;
+
+    // Resolve full image URL if a relative path is provided
+    final String resolvedImageUrl = () {
+      if (providerImagePath.isEmpty) return '';
+      if (providerImagePath.startsWith('http')) return providerImagePath;
+      final String baseUrl = kIsWeb ? 'http://127.0.0.1:8000' : 'http://10.0.2.2:8000';
+      return '$baseUrl/storage/$providerImagePath';
+    }();
 
     return Container(
       width: 180,
@@ -46,23 +55,36 @@ class ServiceCard extends StatelessWidget {
               topLeft: Radius.circular(16),
               topRight: Radius.circular(16),
             ),
-            child: Image.network(
-              providerImagePath,
-              height: 120,
-              width: double.infinity,
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) => Container(
-                height: 120,
-                color: theme.brightness == Brightness.dark
-                    ? Colors.grey[800]
-                    : Colors.grey[300],
-                child: Icon(
-                  Icons.image_not_supported,
-                  size: 40,
-                  color: subTextColor,
-                ),
-              ),
-            ),
+            child: resolvedImageUrl.isEmpty
+                ? Container(
+                    height: 120,
+                    width: double.infinity,
+                    color: theme.brightness == Brightness.dark
+                        ? Colors.grey[800]
+                        : Colors.grey[300],
+                    child: Icon(
+                      Icons.image_not_supported,
+                      size: 40,
+                      color: subTextColor,
+                    ),
+                  )
+                : Image.network(
+                    resolvedImageUrl,
+                    height: 120,
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) => Container(
+                      height: 120,
+                      color: theme.brightness == Brightness.dark
+                          ? Colors.grey[800]
+                          : Colors.grey[300],
+                      child: Icon(
+                        Icons.image_not_supported,
+                        size: 40,
+                        color: subTextColor,
+                      ),
+                    ),
+                  ),
           ),
 
           // Name

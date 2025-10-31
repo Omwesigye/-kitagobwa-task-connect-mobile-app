@@ -21,6 +21,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final TextEditingController ninController = TextEditingController();
   final TextEditingController phoneController = TextEditingController();
   final TextEditingController descriptionController = TextEditingController();
+<<<<<<< HEAD
+=======
+  // Optional: comma-separated image filenames
+  final TextEditingController imagesController = TextEditingController();
+>>>>>>> 442766b (Add admin home and reports screens + backend models for messages, ratings, and reports)
   // --- 1. ADD LOCATION CONTROLLER ---
   final TextEditingController locationController = TextEditingController();
 
@@ -54,6 +59,22 @@ class _SignUpScreenState extends State<SignUpScreen> {
           'description': descriptionController.text.trim(),
           'location': locationController.text.trim(), // Fix: was missing
         });
+<<<<<<< HEAD
+=======
+
+        // Include images[] if provided (comma-separated list)
+        final raw = imagesController.text.trim();
+        if (raw.isNotEmpty) {
+          final List<String> images = raw
+              .split(',')
+              .map((s) => s.trim())
+              .where((s) => s.isNotEmpty)
+              .toList();
+          if (images.isNotEmpty) {
+            body['images'] = images;
+          }
+        }
+>>>>>>> 442766b (Add admin home and reports screens + backend models for messages, ratings, and reports)
       }
       // ---------------------------------------------------
 
@@ -276,6 +297,17 @@ class _SignUpScreenState extends State<SignUpScreen> {
                               value!.isEmpty ? 'Enter Description' : null,
                           decoration: InputDecoration(
                             labelText: 'Description',
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        TextFormField(
+                          controller: imagesController,
+                          decoration: InputDecoration(
+                            labelText: 'Image filenames (comma-separated)',
+                            hintText: 'e.g. img1.jpg, img2.jpg',
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(10),
                             ),

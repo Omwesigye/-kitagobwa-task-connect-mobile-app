@@ -20,10 +20,14 @@ void main() async {
   // ------------------------------------
 
   // --- 2. PASS THE VALUES TO THE APP ---
+<<<<<<< HEAD
   runApp(MyApp(
     isLoggedIn: isLoggedIn,
     userId: userId,
   ));
+=======
+  runApp(MyApp(isLoggedIn: isLoggedIn, userId: userId));
+>>>>>>> 442766b (Add admin home and reports screens + backend models for messages, ratings, and reports)
 }
 
 class MyApp extends StatelessWidget {
@@ -31,11 +35,15 @@ class MyApp extends StatelessWidget {
   final bool isLoggedIn;
   final int userId;
 
+<<<<<<< HEAD
   const MyApp({
     super.key,
     required this.isLoggedIn,
     required this.userId,
   });
+=======
+  const MyApp({super.key, required this.isLoggedIn, required this.userId});
+>>>>>>> 442766b (Add admin home and reports screens + backend models for messages, ratings, and reports)
   // --------------------------------
 
   @override
@@ -47,6 +55,7 @@ class MyApp extends StatelessWidget {
           return MaterialApp(
             title: 'Task Connect App',
             debugShowCheckedModeBanner: false,
+<<<<<<< HEAD
             
             // --- 4. CHOOSE THE CORRECT STARTING SCREEN ---
             home: isLoggedIn && userId != 0
@@ -54,6 +63,17 @@ class MyApp extends StatelessWidget {
                 : const WelcomeScreen(),               // If not, go to welcome screen
             // -----------------------------------------
 
+=======
+
+            // --- 4. CHOOSE THE CORRECT STARTING SCREEN ---
+            home: isLoggedIn && userId != 0
+                ? MainNavigationScreen(
+                    userId: userId,
+                  ) // If logged in, go to main app
+                : const WelcomeScreen(), // If not, go to welcome screen
+
+            // -----------------------------------------
+>>>>>>> 442766b (Add admin home and reports screens + backend models for messages, ratings, and reports)
             theme: TAppTheme.lightTheme,
             darkTheme: TAppTheme.darkTheme,
             themeMode: themeProvider.themeData.brightness == Brightness.light
