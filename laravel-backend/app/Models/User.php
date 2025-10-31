@@ -11,6 +11,11 @@ class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable;
 
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var array<int, string>
+     */
     protected $fillable = [
         'name',
         'email',
@@ -20,26 +25,37 @@ class User extends Authenticatable
         'login_code',
     ];
 
+    /**
+     * The attributes that should be hidden for serialization.
+     *
+     * @var array<int, string>
+     */
     protected $hidden = [
         'password',
         'remember_token',
         'login_code',
     ];
 
-    // Many-to-many: user can have multiple service providers
-    public function serviceProviders()
+    /**
+     * The attributes that should be cast.
+     *
+     * @var array<string, string>
+     */
+    protected $casts = [
+        'email_verified_at' => 'datetime',
+        'is_approved' => 'boolean', // Important for provider logic
+    ];
+
+    // Relationship to the service provider profile
+    public function serviceProvider()
     {
-        return $this->belongsToMany(
-            ServiceProvider::class,     // Related model
-            'user_service_provider',    // Pivot table
-            'user_id',                  // Foreign key on pivot table for this model
-            'service_provider_id'       // Foreign key on pivot table for related model
-        );
+        return $this->hasOne(ServiceProvider::class, 'user_id');
     }
 
-    // Optional: bookings made by the user
+    // Bookings made by the user
     public function bookings()
     {
         return $this->hasMany(Booking::class, 'user_id');
     }
 }
+

@@ -4,7 +4,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'package:task_connect_app/models/service_provider.dart';
 import 'package:task_connect_app/screens/book_page.dart';
-import 'package:task_connect_app/util/provider_card%20.dart';
+// --- 1. FIX THE IMPORT PATH (REMOVED %20) ---
+import 'package:task_connect_app/util/provider_card.dart'; 
+import 'package:flutter/foundation.dart' show kIsWeb; // --- ADD THIS ---
 
 class ProviderListScreen extends StatefulWidget {
   const ProviderListScreen({super.key});
@@ -21,7 +23,12 @@ class _ProviderListScreenState extends State<ProviderListScreen> {
 
   final TextEditingController _searchController = TextEditingController();
   Map<String, bool> savedProviders = {};
-  String get _baseUrl => 'http://127.0.0.1:8000';
+
+  // --- 2. USE PLATFORM-AWARE URL ---
+  String get _baseUrl {
+    return kIsWeb ? "http://127.0.0.1:8000" : "http://10.0.2.2:8000";
+  }
+  // --------------------------------
 
   int? loggedInUserId;
 
@@ -53,6 +60,7 @@ class _ProviderListScreenState extends State<ProviderListScreen> {
     try {
       final headers = {'Accept': 'application/json'};
 
+      // --- 3. USE PLATFORM-AWARE URL ---
       http.Response response = await http
           .get(Uri.parse('$_baseUrl/api/providers'), headers: headers)
           .timeout(const Duration(seconds: 15));
@@ -62,6 +70,7 @@ class _ProviderListScreenState extends State<ProviderListScreen> {
             .get(Uri.parse('$_baseUrl/api/service-providers'), headers: headers)
             .timeout(const Duration(seconds: 15));
       }
+      // ---------------------------------
 
       if (response.statusCode == 200) {
         dynamic decoded = jsonDecode(response.body);
@@ -93,9 +102,11 @@ class _ProviderListScreenState extends State<ProviderListScreen> {
     } catch (e) {
       setState(() => isLoading = false);
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error fetching providers: $e')));
+        if (mounted) { // Add mounted check
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Error fetching providers: $e')));
+        }
       });
     }
   }
@@ -110,7 +121,7 @@ class _ProviderListScreenState extends State<ProviderListScreen> {
             .toList();
       } else if (category == 'Rating Category') {
         filteredProviders = providers
-            .where((p) => (p.rating ?? 0.0) >= 4.5)
+            .where((p) => (p.rating) >= 4.5) // Removed ?? 0.0
             .toList();
       }
     });
@@ -119,8 +130,8 @@ class _ProviderListScreenState extends State<ProviderListScreen> {
   void _searchProviders(String query) {
     setState(() {
       filteredProviders = providers.where((p) {
-        final name = (p.name ?? '').toLowerCase();
-        final service = (p.service ?? '').toLowerCase();
+        final name = (p.name).toLowerCase(); // Removed ?? ''
+        final service = (p.service).toLowerCase(); // Removed ?? ''
         return name.contains(query.toLowerCase()) ||
             service.contains(query.toLowerCase());
       }).toList();
@@ -132,6 +143,16 @@ class _ProviderListScreenState extends State<ProviderListScreen> {
     if (isUserIdLoading) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
+
+    // --- 4. ADD THIS CHECK ---
+    if (loggedInUserId == null) {
+      return const Scaffold(
+        body: Center(
+          child: Text('Error: User ID not found. Please log in again.'),
+        ),
+      );
+    }
+    // -------------------------
 
     final theme = Theme.of(context);
 
@@ -219,58 +240,67 @@ class _ProviderListScreenState extends State<ProviderListScreen> {
               child: isLoading
                   ? const Center(child: CircularProgressIndicator())
                   : filteredProviders.isEmpty
-                  ? Center(
-                      child: Text(
-                        'No providers found.',
-                        style: theme.textTheme.bodyMedium,
-                      ),
-                    )
-                  : ListView.builder(
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                      itemCount: filteredProviders.length,
-                      itemBuilder: (context, index) {
-                        final provider = filteredProviders[index];
-                        return Center(
-                          child: ConstrainedBox(
-                            constraints: const BoxConstraints(maxWidth: 500),
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16.0,
-                                vertical: 8.0,
-                              ),
-                              child: ProviderCard(
-                                name: provider.name ?? 'No Name',
-                                service: provider.service ?? 'No Service',
-                                telnumber: provider.telnumber ?? 'No Tel',
-                                description: provider.description ?? '',
-                                images: provider.images ?? [],
-                                rating: provider.rating ?? 0.0,
-                                isSaved:
-                                    savedProviders[provider.id.toString()] ??
-                                    false,
-                                onSaveToggle: (isSaved) {
-                                  setState(() {
-                                    savedProviders[provider.id.toString()] =
-                                        isSaved;
-                                  });
-                                },
-                                onBook: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (_) => BookPage(
-                                        provider: provider,
-                                        userId: loggedInUserId!,
-                                      ),
-                                    ),
-                                  );
-                                },
-                              ),
-                            ),
+                      ? Center(
+                          child: Text(
+                            'No providers found.',
+                            style: theme.textTheme.bodyMedium,
                           ),
-                        );
-                      },
-                    ),
+                        )
+                      : ListView.builder(
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          itemCount: filteredProviders.length,
+                          itemBuilder: (context, index) {
+                            final provider = filteredProviders[index];
+                            return Center(
+                              child: ConstrainedBox(
+                                constraints: const BoxConstraints(maxWidth: 500),
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16.0,
+                                    vertical: 8.0,
+                                  ),
+                                  // --- 5. This call is now correct ---
+                                  child: ProviderCard(
+                                    // Your existing fields
+                                    name: provider.name,
+                                    service: provider.service,
+                                    telnumber: provider.telnumber,
+                                    description: provider.description,
+                                    images: provider.images,
+                                    rating: provider.rating,
+                                    isSaved:
+                                        savedProviders[provider.id.toString()] ??
+                                            false,
+                                    
+                                    // --- PASS THE NEW PARAMETERS ---
+                                    loggedInUserId: loggedInUserId!,
+                                    providerUserId: provider.userId,
+                                    providerName: provider.name,
+                                    // -------------------------------
+                                    
+                                    onSaveToggle: (isSaved) {
+                                      setState(() {
+                                        savedProviders[provider.id.toString()] =
+                                            isSaved;
+                                      });
+                                    },
+                                    onBook: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (_) => BookPage(
+                                            provider: provider,
+                                            userId: loggedInUserId!,
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
             ),
           ],
         ),
@@ -278,3 +308,4 @@ class _ProviderListScreenState extends State<ProviderListScreen> {
     );
   }
 }
+

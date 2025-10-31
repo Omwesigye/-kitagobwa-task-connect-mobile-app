@@ -1,8 +1,10 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:task_connect_app/main_navigation_screen.dart';
+import 'package:task_connect_app/screens/provider_navigation_screen.dart'; 
 
 class SigninScreen extends StatefulWidget {
   const SigninScreen({super.key});
@@ -21,6 +23,7 @@ class _SigninScreenState extends State<SigninScreen> {
   String selectedRole = 'user';
   bool hidePassword = true;
   bool isLoading = false;
+
   Future<void> loginUser() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -38,10 +41,14 @@ class _SigninScreenState extends State<SigninScreen> {
       body['login_code'] = loginCodeController.text.trim();
     }
 
+    final String apiUrl = kIsWeb
+        ? "http://127.0.0.1:8000/api/login"
+        : "http://10.0.2.2:8000/api/login";
+
     try {
       final response = await http.post(
-        Uri.parse("http://127.0.0.1:8000/api/login"),
-        headers: {'Content-Type': 'application/json'},
+        Uri.parse(apiUrl),
+        headers: {'Content-Type': 'application/json', 'Accept': 'application/json'},
         body: jsonEncode(body),
       );
 
@@ -49,33 +56,50 @@ class _SigninScreenState extends State<SigninScreen> {
       final data = jsonDecode(response.body);
 
       if (response.statusCode == 200) {
-        // Extract user ID safely
-        final userId = data['user'] != null && data['user']['id'] != null
-            ? data['user']['id']
-            : null;
+        // --- 1. EXTRACT ALL DATA FROM LOGIN ---
+        final userId = data['user'] != null ? data['user']['id'] : null;
+        final String userRole = data['user'] != null ? data['user']['role'] : 'user';
+        final String? token = data['token']; // Get the token
+        // ----------------------------------------
 
-        if (userId == null) {
+        if (userId == null || token == null) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Login failed: User ID missing')),
+            const SnackBar(content: Text('Login failed: User data or token missing')),
           );
           return;
         }
 
-        // Save session flag for hot reload / refresh
+        // --- 2. SAVE EVERYTHING TO SharedPreferences ---
         final prefs = await SharedPreferences.getInstance();
         await prefs.setInt('userId', userId);
         await prefs.setBool('isLoggedIn', true);
+        await prefs.setString('userRole', userRole);
+        await prefs.setString('auth_token', token); // ⇐ CRITICAL STEP
+        // ---------------------------------------------
 
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Login successful as ${data['role']}')),
+          SnackBar(content: Text('Login successful as $userRole')),
         );
 
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (_) => MainNavigationScreen(userId: userId),
-          ),
-        );
+        // --- 3. NAVIGATE BASED ON ROLE ---
+        if (userRole == 'service_provider') {
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(
+              builder: (_) => ProviderNavigationScreen(userId: userId),
+            ),
+            (route) => false,
+          );
+        } else {
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(
+              builder: (_) => MainNavigationScreen(userId: userId),
+            ),
+            (route) => false,
+          );
+        }
+        // ---------------------------------
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(data['message'] ?? 'Login failed')),
@@ -85,13 +109,13 @@ class _SigninScreenState extends State<SigninScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text('Error connecting to server: $e')));
+      ).showSnackBar(SnackBar(content: Text('Error connecting to $apiUrl. $e')));
     } finally {
       if (!mounted) return;
       setState(() => isLoading = false);
     }
   }
-
+  
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -200,3 +224,4 @@ class _SigninScreenState extends State<SigninScreen> {
     );
   }
 }
+

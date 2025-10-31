@@ -1,3 +1,11 @@
+// lib/util/booking_card.dart
+
+// --- 1. ADD IMPORTS ---
+import 'dart:convert';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:http/http.dart' as http;
+// ----------------------
+
 import 'package:flutter/material.dart';
 
 class BookingsCard extends StatefulWidget {
@@ -9,6 +17,13 @@ class BookingsCard extends StatefulWidget {
   final String userStatus;
   final String providerStatus;
 
+  // --- 2. ADD THESE REQUIRED FIELDS ---
+  final int bookingId;
+  final int providerId;
+  final int userId;
+  final VoidCallback onRatingSubmitted; // To refresh the list
+  // ------------------------------------
+
   const BookingsCard({
     super.key,
     required this.providerName,
@@ -18,6 +33,11 @@ class BookingsCard extends StatefulWidget {
     required this.time,
     required this.userStatus,
     required this.providerStatus,
+    // --- 3. ADD TO CONSTRUCTOR ---
+    required this.bookingId,
+    required this.providerId,
+    required this.userId,
+    required this.onRatingSubmitted,
   });
 
   @override
@@ -25,12 +45,87 @@ class BookingsCard extends StatefulWidget {
 }
 
 class _BookingsCardState extends State<BookingsCard> {
-  bool _isCompleted = false;
+  // --- 4. REMOVE _isCompleted, ADD CONTROLLER & LOADING ---
   double _rating = 3.0;
-  String _report = "";
+  final TextEditingController _commentController = TextEditingController();
+  bool _isLoading = false;
+  // ---------------------------------------------------
+
+  // --- 5. ADD THE API URL ---
+  String get _apiUrl {
+    return kIsWeb
+        ? "http://127.0.0.1:8000/api"
+        : "http://10.0.2.2:8000/api";
+  }
+
+  String get _baseUrl {
+    return kIsWeb ? "http://127.0.0.1:8000" : "http://10.0.2.2:8000";
+  }
+  // -------------------------
+
+  // --- 6. ADD THE SUBMIT RATING FUNCTION ---
+  Future<void> _submitRating() async {
+    setState(() => _isLoading = true);
+
+    try {
+      final response = await http.post(
+        Uri.parse('$_apiUrl/ratings'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: jsonEncode({
+          'user_id': widget.userId,
+          'provider_id': widget.providerId,
+          'booking_id': widget.bookingId,
+          'rating': _rating.toInt(),
+          'comment': _commentController.text.trim(),
+        }),
+      );
+
+      if (!mounted) return;
+      final body = jsonDecode(response.body);
+
+      if (response.statusCode == 201) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Review submitted successfully!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        // Call the callback to refresh the bookings list
+        widget.onRatingSubmitted();
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: ${body['message']}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Connection error: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+  // ---------------------------------------
 
   @override
   Widget build(BuildContext context) {
+    // --- 7. CHECK STATUS FROM WIDGET ---
+    bool isCompleted = widget.userStatus.toLowerCase() == 'completed' ||
+        widget.providerStatus.toLowerCase() == 'completed';
+    // ---------------------------------
+
     return Card(
       elevation: 3,
       margin: const EdgeInsets.all(12),
@@ -45,10 +140,16 @@ class _BookingsCardState extends State<BookingsCard> {
               children: [
                 CircleAvatar(
                   radius: 30,
-                  backgroundImage: NetworkImage(widget.providerImageUrl),
+                  // --- 8. FIX IMAGE URL ---
+                  backgroundImage: NetworkImage(
+                    widget.providerImageUrl.startsWith('http')
+                      ? widget.providerImageUrl
+                      : '$_baseUrl/storage/${widget.providerImageUrl}'
+                  ),
                   onBackgroundImageError: (_, __) =>
                       const Icon(Icons.person, size: 30),
                 ),
+                // --------------------------
                 const SizedBox(width: 16),
                 Expanded(
                   child: Column(
@@ -66,7 +167,7 @@ class _BookingsCardState extends State<BookingsCard> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        'Date: ${widget.date}  Time: ${widget.time}',
+                        'Date: ${widget.date}   Time: ${widget.time}',
                         style: const TextStyle(fontSize: 14),
                       ),
                       const SizedBox(height: 4),
@@ -74,29 +175,24 @@ class _BookingsCardState extends State<BookingsCard> {
                         'User: ${widget.userStatus}, Provider: ${widget.providerStatus}',
                         style: TextStyle(
                           fontSize: 14,
-                          color: widget.userStatus == 'Completed'
-                              ? Colors.green
-                              : Colors.orange,
+                          color: isCompleted ? Colors.green : Colors.orange,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
                     ],
                   ),
                 ),
-                Checkbox(
-                  value: _isCompleted,
-                  onChanged: (val) {
-                    setState(() => _isCompleted = val ?? false);
-                  },
-                ),
+                // --- 9. REMOVE CHECKBOX ---
               ],
             ),
 
             // Expanded Section: Report & Rating
             AnimatedCrossFade(
-              crossFadeState: _isCompleted
+              // --- 10. USE isCompleted VARIABLE ---
+              crossFadeState: isCompleted
                   ? CrossFadeState.showFirst
                   : CrossFadeState.showSecond,
+              // ----------------------------------
               duration: const Duration(milliseconds: 300),
               firstChild: Padding(
                 padding: const EdgeInsets.only(top: 12),
@@ -104,25 +200,21 @@ class _BookingsCardState extends State<BookingsCard> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text(
-                      'Report any issues:',
+                      'Rate this service:',
                       style:
                           TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 8),
                     TextField(
+                      // --- 11. USE CONTROLLER ---
+                      controller: _commentController,
                       maxLines: 3,
                       decoration: const InputDecoration(
-                        hintText: 'Describe any problems...',
+                        hintText: 'Add a public comment... (optional)',
                         border: OutlineInputBorder(),
                       ),
-                      onChanged: (val) => _report = val,
                     ),
                     const SizedBox(height: 16),
-                    const Text(
-                      'Rate their work:',
-                      style:
-                          TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                    ),
                     Row(
                       children: [
                         Expanded(
@@ -140,6 +232,29 @@ class _BookingsCardState extends State<BookingsCard> {
                         Text(_rating.toStringAsFixed(1)),
                       ],
                     ),
+                    // --- 12. ADD SUBMIT BUTTON ---
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: _isLoading ? null : _submitRating,
+                        style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.blue),
+                        child: _isLoading
+                            ? const SizedBox(
+                                height: 20,
+                                width: 20,
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : const Text(
+                                "Submit Review",
+                                style: TextStyle(color: Colors.white),
+                              ),
+                      ),
+                    )
+                    // -----------------------------
                   ],
                 ),
               ),

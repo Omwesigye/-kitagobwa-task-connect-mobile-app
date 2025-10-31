@@ -1,13 +1,16 @@
-import 'dart:convert';
+import 'package:flutter/foundation.dart' show kIsWeb; 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:http/http.dart' as http;
+// import 'package:http/http.dart' as http; // We no longer need this
 import 'package:task_connect_app/models/service_provider.dart';
-import 'package:task_connect_app/models/booking_model.dart';
+// import 'package:task_connect_app/models/booking_model.dart'; // We don't need this model here
+// --- 1. IMPORT YOUR API SERVICE ---
+import 'package:task_connect_app/services/api_service.dart'; 
+// ---------------------------------
 
 class BookPage extends StatefulWidget {
   final ServiceProviderModel provider;
-  final int userId; // Make this non-nullable
+  final int userId; // This is the CUSTOMER'S ID
 
   const BookPage({super.key, required this.provider, required this.userId});
 
@@ -21,7 +24,11 @@ class _BookPageState extends State<BookPage> {
   final TextEditingController _locationController = TextEditingController();
   bool _isLoading = false;
 
-  String get _baseUrl => 'http://127.0.0.1:8000'; // Laravel backend URL
+  // --- 2. GET THE BASE URL (for images) ---
+  String get _baseUrl {
+    return kIsWeb ? "http://127.0.0.1:8000" : "http://10.0.2.2:8000";
+  }
+  // ------------------------------------
 
   void _pickDate() async {
     DateTime? picked = await showDatePicker(
@@ -41,6 +48,7 @@ class _BookPageState extends State<BookPage> {
     if (picked != null) setState(() => _selectedTime = picked);
   }
 
+  // --- 3. REPLACE YOUR _confirmBooking FUNCTION ---
   Future<void> _confirmBooking() async {
     if (_selectedDate == null ||
         _selectedTime == null ||
@@ -55,64 +63,54 @@ class _BookPageState extends State<BookPage> {
 
     setState(() => _isLoading = true);
 
-    final booking = BookingModel(
-      userId: widget.userId, // PASS userId here
-      providerId: widget.provider.id,
-      providerName: widget.provider.name ?? 'Unknown',
-      providerImageUrl: widget.provider.images.isNotEmpty
-          ? widget.provider.images[0]
-          : '',
-      service: widget.provider.service ?? '',
-      date: DateFormat('yyyy-MM-dd').format(_selectedDate!),
-      time: _formatTimeOfDay(_selectedTime!),
-      location: _locationController.text,
-      userStatus: 'pending',
-      providerStatus: 'pending',
-    );
-
     try {
-      final url = Uri.parse('$_baseUrl/api/bookings');
-      final headers = {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      };
-
-      final response = await http.post(
-        url,
-        body: jsonEncode(booking.toJson()),
-        headers: headers,
+      // Call the ApiService to create the booking
+      // This now sends the auth token automatically
+      await ApiService.createBooking(
+        // 'userId' is now handled by the token in your Laravel backend
+        providerId: widget.provider.id,
+        providerName: widget.provider.name,
+        providerImageUrl: widget.provider.images.isNotEmpty
+            ? widget.provider.images[0]
+            : '',
+        service: widget.provider.service,
+        date: DateFormat('yyyy-MM-dd').format(_selectedDate!),
+        time: _formatTimeOfDay(_selectedTime!),
+        location: _locationController.text,
       );
 
-      if (response.statusCode == 201 || response.statusCode == 200) {
-        showDialog(
-          context: context,
-          builder: (_) => AlertDialog(
-            title: const Text('Success'),
-            content: const Text('Your booking was successful!'),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.pop(context); // Close dialog
-                  Navigator.pop(context); // Go back to previous screen
-                },
-                child: const Text('OK'),
-              ),
-            ],
-          ),
-        );
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Booking failed: ${response.body}')),
-        );
-      }
+      if (!mounted) return; 
+
+      // Show success dialog
+      showDialog(
+        context: context,
+        builder: (_) => AlertDialog(
+          title: const Text('Success'),
+          content: const Text('Your booking was successful!'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context); // Close dialog
+                Navigator.pop(context); // Go back to previous screen
+              },
+              child: const Text('OK'),
+            ),
+          ],
+        ),
+      );
     } catch (e) {
+      if (!mounted) return;
+      // Show error from ApiService
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text('Booking failed: $e')));
+      ).showSnackBar(SnackBar(content: Text('$e'), backgroundColor: Colors.red,));
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
+  // -------------------------------------------------
 
   @override
   Widget build(BuildContext context) {
@@ -131,8 +129,26 @@ class _BookPageState extends State<BookPage> {
             ),
             Text(provider.service, style: const TextStyle(fontSize: 20)),
             const SizedBox(height: 10),
+            
+            // --- 4. FIX IMAGE URL ---
             if (provider.images.isNotEmpty)
-              Image.network(provider.images[0], height: 150, fit: BoxFit.cover),
+              Image.network(
+                provider.images[0].startsWith('http')
+                  ? provider.images[0]
+                  // Use _baseUrl to construct the full URL
+                  : '$_baseUrl/storage/${provider.images[0]}',
+                height: 150, 
+                width: double.infinity,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) => Container(
+                  height: 150,
+                  width: double.infinity,
+                  color: Colors.grey[200],
+                  child: Icon(Icons.broken_image, color: Colors.grey[400]),
+                ),
+              ),
+            // ------------------------
+
             const SizedBox(height: 10),
             Text(provider.description, style: const TextStyle(fontSize: 16)),
             const SizedBox(height: 20),
@@ -214,6 +230,8 @@ class _BookPageState extends State<BookPage> {
       timeOfDay.hour,
       timeOfDay.minute,
     );
+    // Format to HH:MM:SS
     return "${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}:00";
   }
 }
+

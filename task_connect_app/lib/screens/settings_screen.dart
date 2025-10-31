@@ -5,6 +5,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:task_connect_app/themes/theme_provider.dart';
 
+// --- 1. ADD THESE IMPORTS ---
+import 'package:task_connect_app/services/api_service.dart';
+import 'package:task_connect_app/screens/welcome_screen.dart';
+// ----------------------------
+
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
 
@@ -16,6 +21,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   final TextEditingController _usernameController = TextEditingController();
   String _username = "";
   File? _profileImage;
+  bool _isLoggingOut = false; // --- 2. ADD LOADING STATE ---
 
   @override
   void initState() {
@@ -40,6 +46,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('username', _usernameController.text);
     setState(() => _username = _usernameController.text);
+    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text("Username updated successfully")),
     );
@@ -54,6 +61,37 @@ class _SettingsScreenState extends State<SettingsScreen> {
       await prefs.setString('profileImagePath', pickedFile.path);
     }
   }
+
+  // --- 3. ADD THE LOGOUT FUNCTION ---
+  Future<void> _logout() async {
+    if (!mounted) return;
+    setState(() => _isLoggingOut = true);
+
+    try {
+      // 1. Tell the server to log out (and invalidate the token)
+      await ApiService.logout();
+    } catch (e) {
+      // Catch any errors but proceed with local logout
+      print('Error logging out from server: $e');
+    } finally {
+      // 2. Clear all local data regardless of API success
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('isLoggedIn');
+      await prefs.remove('userId');
+      await prefs.remove('userRole');
+      await prefs.remove('auth_token');
+
+      // 3. Navigate to WelcomeScreen and remove all other screens
+      if (mounted) {
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => const WelcomeScreen()),
+          (route) => false, // This clears the stack
+        );
+      }
+    }
+  }
+  // ---------------------------------
 
   @override
   void dispose() {
@@ -150,9 +188,32 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 onChanged: (value) => themeProvider.toggleTheme(),
               ),
             ),
+
+            const Divider(height: 40),
+
+            // --- 4. ADD THE LOGOUT BUTTON ---
+            Center(
+              child: _isLoggingOut
+                  ? const CircularProgressIndicator()
+                  : ElevatedButton(
+                      onPressed: _logout,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red[700],
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 40, vertical: 12),
+                      ),
+                      child: const Text(
+                        'Log Out',
+                        style: TextStyle(fontSize: 16),
+                      ),
+                    ),
+            )
+            // --------------------------------
           ],
         ),
       ),
     );
   }
 }
+

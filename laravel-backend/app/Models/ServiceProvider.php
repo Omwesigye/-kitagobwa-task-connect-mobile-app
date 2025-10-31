@@ -8,7 +8,8 @@ use Illuminate\Database\Eloquent\Model;
 class ServiceProvider extends Model
 {
     use HasFactory;
-
+    
+    // ... (Your existing $fillable array is here)
     protected $fillable = [
         'user_id',
         'location',
@@ -17,22 +18,27 @@ class ServiceProvider extends Model
         'service',
         'description',
         'rating',
-        'images',
+        'latitude',
+        'longitude'
+        // 'images' is handled by $casts, no need to be fillable
     ];
 
+    // --- ADD THIS PROPERTY ---
+    /**
+     * The attributes that should be cast.
+     *
+     * @var array
+     */
     protected $casts = [
-        'images' => 'array', // Cast JSON column to array automatically
+        'images' => 'array',
     ];
+    // -------------------------
 
-    // Provider belongs to a single user via user_id
+    /**
+     * Get the user that owns the service provider profile.
+     */
     public function user()
     {
-        return $this->belongsTo(User::class);
-    }
-
-    // Optional: bookings for this provider
-    public function bookings()
-    {
-        return $this->hasMany(Booking::class, 'provider_id');
+        return $this->belongsTo(User::class, 'user_id');
     }
 }

@@ -1,5 +1,8 @@
 class ServiceProviderModel {
   final int id;
+  // --- 1. ADD THIS FIELD ---
+  final int userId;
+  // -----------------------
   final String name;
   final String service;
   final String description;
@@ -9,6 +12,9 @@ class ServiceProviderModel {
 
   ServiceProviderModel({
     required this.id,
+    // --- 2. ADD TO CONSTRUCTOR ---
+    required this.userId,
+    // ---------------------------
     required this.name,
     required this.service,
     required this.description,
@@ -24,6 +30,10 @@ class ServiceProviderModel {
 
     return ServiceProviderModel(
       id: json['id'] ?? 0,
+      // --- 3. PARSE THE user_id ---
+      // This line finds the user ID from your API
+      userId: json['user_id'] ?? (user != null ? user['id'] : 0),
+      // ----------------------------
       name: user != null ? (user['name']?.toString() ?? 'No Name') : 'No Name',
       service: json['service']?.toString() ?? 'Unknown Service',
       description: json['description']?.toString() ?? '',
@@ -40,6 +50,7 @@ class ServiceProviderModel {
   Map<String, dynamic> toJson() {
     return {
       'id': id,
+      'user_id': userId, // --- 4. ADD TO toJson ---
       'name': name,
       'service': service,
       'description': description,

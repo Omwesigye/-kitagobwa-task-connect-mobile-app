@@ -13,15 +13,27 @@ class AuthController extends Controller
     // Register user or service provider
     public function register(Request $request)
     {
+        // --- THIS IS YOUR CORRECT, EXISTING CODE ---
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users',
             'password' => 'required|min:6',
             'role' => 'required|in:user,service_provider',
+            
+            // Provider-specific rules
+            'location' => 'required_if:role,service_provider|string',
+            'nin' => 'required_if:role,service_provider|string|unique:service_providers',
+            'telnumber' => 'required_if:role,service_provider|string',
+            'service' => 'required_if:role,service_provider|string',
+            'description' => 'nullable|string',
         ]);
 
         if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $validator->errors()
+            ], 422);
         }
 
         $user = User::create([
@@ -29,22 +41,10 @@ class AuthController extends Controller
             'email' => $request->email,
             'password' => Hash::make($request->password),
             'role' => $request->role,
+            // 'is_approved' will be 0 by default
         ]);
 
         if ($request->role === 'service_provider') {
-            $providerValidator = Validator::make($request->all(), [
-                'location' => 'required|string',
-                'nin' => 'required|string',
-                'telnumber' => 'required|string',
-                'service' => 'required|string',
-                'description' => 'nullable|string',
-            ]);
-
-            if ($providerValidator->fails()) {
-                $user->delete();
-                return response()->json(['errors' => $providerValidator->errors()], 422);
-            }
-
             ServiceProvider::create([
                 'user_id' => $user->id,
                 'location' => $request->location,
@@ -56,7 +56,9 @@ class AuthController extends Controller
         }
 
         return response()->json([
-            'message' => 'Registration successful. Service providers must await admin approval.'
+            'success' => true,
+            'message' => 'Registration successful. Service providers must await admin approval.',
+            'user' => $user
         ], 201);
     }
 
@@ -86,9 +88,12 @@ class AuthController extends Controller
                 return response()->json(['message' => 'Invalid login code'], 401);
             }
 
+            // --- 
+            // --- THIS IS THE FIX: We comment out these two lines ---
             // Clear login code after use
-            $user->login_code = null;
-            $user->save();
+            // $user->login_code = null;
+            // $user->save();
+            // ---
         }
 
         $token = $user->createToken('auth_token')->plainTextToken;
@@ -108,3 +113,4 @@ class AuthController extends Controller
         return response()->json(['message' => 'Logged out successfully.']);
     }
 }
+

@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:task_connect_app/screens/welcome_screen.dart';
 import 'dart:convert';
 import 'signin_screen.dart';
+import 'package:flutter/foundation.dart' show kIsWeb; 
+
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -20,76 +21,93 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final TextEditingController ninController = TextEditingController();
   final TextEditingController phoneController = TextEditingController();
   final TextEditingController descriptionController = TextEditingController();
+  // --- 1. ADD LOCATION CONTROLLER ---
+  final TextEditingController locationController = TextEditingController();
 
   String selectedRole = 'user';
   bool agreePersonalData = true;
 
   Future<void> registerUser() async {
     if (!_formSignupKey.currentState!.validate()) return;
+    if (!mounted) return;
+
+    final String apiUrl = kIsWeb
+        ? "http://127.0.0.1:8000/api/register" // For Web
+        : "http://10.0.2.2:8000/api/register"; // For Android Emulator
 
     try {
-      final uri = Uri.parse('http://127.0.0.1:8000/api/register');
+      final uri = Uri.parse(apiUrl); 
+
+      // --- 2. UPDATE THE BODY TO MATCH YOUR AuthController ---
+      final Map<String, dynamic> body = {
+        'name': fullNameController.text.trim(),
+        'email': emailController.text.trim(),
+        'password': passwordController.text.trim(),
+        'role': selectedRole,
+      };
+
+      if (selectedRole == 'service_provider') {
+        body.addAll({
+          'service': serviceController.text.trim(),
+          'nin': ninController.text.trim(),
+          'telnumber': phoneController.text.trim(), // Fix: was 'phone'
+          'description': descriptionController.text.trim(),
+          'location': locationController.text.trim(), // Fix: was missing
+        });
+      }
+      // ---------------------------------------------------
 
       final response = await http.post(
         uri,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'name': fullNameController.text.trim(),
-          'email': emailController.text.trim(),
-          'password': passwordController.text.trim(),
-          'role': selectedRole,
-          if (selectedRole == 'service_provider') ...{
-            'service': serviceController.text.trim(),
-            'nin': ninController.text.trim(),
-            'phone': phoneController.text.trim(),
-            'description': descriptionController.text.trim(),
-          },
-        }),
+        headers: {'Content-Type': 'application/json', 'Accept': 'application/json'},
+        body: jsonEncode(body),
       );
 
+      if (!mounted) return;
       final data = jsonDecode(response.body);
 
-      if (response.statusCode == 200 && data['success'] == true) {
-        if (selectedRole == 'user') {
-          // Regular user
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Registration Successful'),
-              duration: Duration(seconds: 2),
-            ),
-          );
-          Future.delayed(const Duration(seconds: 2), () {
+      // --- 3. UPDATE SUCCESS LOGIC ---
+      // Your backend returns 201 on success
+      if (response.statusCode == 201) {
+        
+        final message = data['message'] ?? 'Registration successful.';
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(message),
+            duration: const Duration(seconds: 4),
+            backgroundColor: Colors.green,
+          ),
+        );
+        
+        // As per your AuthController, all users go back to login
+        Future.delayed(const Duration(seconds: 4), () {
+          if (mounted) {
+             // Go to SigninScreen to login
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(builder: (_) => const SigninScreen()),
             );
-          });
-        } else {
-          // Service provider
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text(
-                'Your details have been submitted. You will receive a verification email to login.',
-              ),
-              duration: Duration(seconds: 6),
-            ),
-          );
-          Future.delayed(const Duration(seconds: 6), () {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (_) => const WelcomeScreen()),
-            );
-          });
-        }
+          }
+        });
+
       } else {
+        // Handle validation errors from Laravel
+        String errorMessage = data['message'] ?? 'Registration failed';
+        if (data['errors'] != null) {
+           // Get the first error from the list
+           errorMessage = data['errors'].entries.first.value[0];
+        }
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(data['message'] ?? 'Registration failed')),
+          SnackBar(content: Text(errorMessage, style: const TextStyle(color: Colors.white)), backgroundColor: Colors.red),
         );
       }
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Error: $e')));
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error connecting to $apiUrl. $e')));
+      }
     }
   }
 
@@ -201,13 +219,27 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       // Additional fields if service provider
                       if (selectedRole == 'service_provider') ...[
                         const SizedBox(height: 20),
+                        // --- 4. ADD LOCATION FIELD ---
+                        TextFormField(
+                          controller: locationController,
+                          validator: (value) =>
+                              value!.isEmpty ? 'Enter your location (e.g., Makerere)' : null,
+                          decoration: InputDecoration(
+                            labelText: 'Your Location',
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                        ),
+                        // -------------------------
+                        const SizedBox(height: 20),
                         TextFormField(
                           controller: serviceController,
                           validator: (value) => value!.isEmpty
                               ? 'Enter the service you provide'
                               : null,
                           decoration: InputDecoration(
-                            labelText: 'Service Type',
+                            labelText: 'Service Type (e.g., Plumber)',
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(10),
                             ),
@@ -309,3 +341,4 @@ class _SignUpScreenState extends State<SignUpScreen> {
     );
   }
 }
+

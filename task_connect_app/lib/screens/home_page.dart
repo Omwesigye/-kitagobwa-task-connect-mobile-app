@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:task_connect_app/models/service_provider.dart';
 import 'package:task_connect_app/screens/settings_screen.dart';
 import 'package:task_connect_app/services/api_service.dart';
 import 'package:task_connect_app/util/Service_card.dart';
 import 'package:task_connect_app/util/category_card.dart';
-import 'package:task_connect_app/themes/theme_provider.dart';
 
 class HomePage extends StatefulWidget {
   final VoidCallback? onNavigateToProviders;
