@@ -84,10 +84,14 @@ class BookingModel {
     print('Raw API response: ${response.body}');
 
     if (response.statusCode == 200) {
-      final List<dynamic> jsonData = jsonDecode(response.body)['data'];
-      return jsonData.map((json) => BookingModel.fromJson(json)).toList();
+      try {
+        final List<dynamic> jsonData = jsonDecode(response.body)['data'];
+        return jsonData.map((json) => BookingModel.fromJson(json)).toList();
+      } catch (e) {
+        throw Exception('Invalid JSON response from server. The server may have returned an HTML error page.');
+      }
     } else {
-      throw Exception('Failed to load bookings');
+      throw Exception('Failed to load bookings (${response.statusCode})');
     }
   }
 }

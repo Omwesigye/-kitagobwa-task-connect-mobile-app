@@ -66,11 +66,15 @@ class _ProviderChatListScreenState extends State<ProviderChatListScreen> {
     );
 
     if (response.statusCode == 200) {
-      List<dynamic> jsonList = jsonDecode(response.body);
-      return jsonList.map((json) => ChatContact.fromJson(json)).toList();
+      try {
+        List<dynamic> jsonList = jsonDecode(response.body);
+        return jsonList.map((json) => ChatContact.fromJson(json)).toList();
+      } catch (e) {
+        throw Exception('Invalid JSON response from server. The server may have returned an HTML error page.');
+      }
     } else {
       // This will now show the error from the server
-      throw Exception('Failed to load conversations: ${response.body}');
+      throw Exception('Failed to load conversations (${response.statusCode})');
     }
   }
   // -----------------------------

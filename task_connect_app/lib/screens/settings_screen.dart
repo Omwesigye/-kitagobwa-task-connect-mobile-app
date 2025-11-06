@@ -91,8 +91,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       }
     }
   }
-  // ---------------------------------
-
+  
   @override
   void dispose() {
     _usernameController.dispose();

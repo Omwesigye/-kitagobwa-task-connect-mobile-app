@@ -39,12 +39,16 @@ class ApiService {
   static Future<List<ServiceProviderModel>> fetchProviders() async {
     final response = await http.get(Uri.parse('$_baseUrl/service-providers'));
     if (response.statusCode == 200) {
-      final List<dynamic> jsonData = jsonDecode(response.body)['data'];
-      return jsonData
-          .map((json) => ServiceProviderModel.fromJson(json))
-          .toList();
+      try {
+        final List<dynamic> jsonData = jsonDecode(response.body)['data'];
+        return jsonData
+            .map((json) => ServiceProviderModel.fromJson(json))
+            .toList();
+      } catch (e) {
+        throw Exception('Invalid JSON response from server. The server may have returned an HTML error page.');
+      }
     } else {
-      throw Exception('Failed to load providers');
+      throw Exception('Failed to load providers (${response.statusCode})');
     }
   }
 
@@ -56,10 +60,14 @@ class ApiService {
       headers: headers,
     );
     if (response.statusCode == 200) {
-      final List<dynamic> jsonData = jsonDecode(response.body);
-      return jsonData.map((json) => BookingModel.fromJson(json)).toList();
+      try {
+        final List<dynamic> jsonData = jsonDecode(response.body);
+        return jsonData.map((json) => BookingModel.fromJson(json)).toList();
+      } catch (e) {
+        throw Exception('Invalid JSON response from server. The server may have returned an HTML error page.');
+      }
     } else {
-      throw Exception('Failed to load bookings: ${response.body}');
+      throw Exception('Failed to load bookings (${response.statusCode})');
     }
   }
 
@@ -103,10 +111,14 @@ class ApiService {
       headers: headers,
     );
     if (response.statusCode == 200) {
-      final List<dynamic> jsonData = jsonDecode(response.body);
-      return jsonData.map((json) => BookingModel.fromJson(json)).toList();
+      try {
+        final List<dynamic> jsonData = jsonDecode(response.body);
+        return jsonData.map((json) => BookingModel.fromJson(json)).toList();
+      } catch (e) {
+        throw Exception('Invalid JSON response from server. The server may have returned an HTML error page.');
+      }
     } else {
-      throw Exception('Failed to load provider bookings: ${response.body}');
+      throw Exception('Failed to load provider bookings (${response.statusCode})');
     }
   }
 
@@ -117,9 +129,13 @@ class ApiService {
       headers: headers,
     );
     if (response.statusCode == 200) {
-      return BookingModel.fromJson(jsonDecode(response.body)['data']);
+      try {
+        return BookingModel.fromJson(jsonDecode(response.body)['data']);
+      } catch (e) {
+        throw Exception('Invalid JSON response from server. The server may have returned an HTML error page.');
+      }
     } else {
-      throw Exception('Failed to accept booking: ${response.body}');
+      throw Exception('Failed to accept booking (${response.statusCode})');
     }
   }
 
@@ -130,9 +146,13 @@ static Future<BookingModel> declineBooking(int bookingId) async {
       headers: headers,
     );
     if (response.statusCode == 200) {
-      return BookingModel.fromJson(jsonDecode(response.body)['data']);
+      try {
+        return BookingModel.fromJson(jsonDecode(response.body)['data']);
+      } catch (e) {
+        throw Exception('Invalid JSON response from server. The server may have returned an HTML error page.');
+      }
     } else {
-      throw Exception('Failed to decline booking: ${response.body}');
+      throw Exception('Failed to decline booking (${response.statusCode})');
     }
   }
 
@@ -143,9 +163,13 @@ static Future<BookingModel> declineBooking(int bookingId) async {
       headers: headers,
     );
     if (response.statusCode == 200) {
-      return BookingModel.fromJson(jsonDecode(response.body)['data']);
+      try {
+        return BookingModel.fromJson(jsonDecode(response.body)['data']);
+      } catch (e) {
+        throw Exception('Invalid JSON response from server. The server may have returned an HTML error page.');
+      }
     } else {
-      throw Exception('Failed to complete booking: ${response.body}');
+      throw Exception('Failed to complete booking (${response.statusCode})');
     }
   }
 
@@ -169,9 +193,13 @@ static Future<BookingModel> declineBooking(int bookingId) async {
     );
 
     if (response.statusCode == 200) {
-      return jsonDecode(response.body);
+      try {
+        return jsonDecode(response.body);
+      } catch (e) {
+        throw Exception('Invalid JSON response from server. The server may have returned an HTML error page.');
+      }
     } else {
-      throw Exception('Failed to load profile: ${response.body}');
+      throw Exception('Failed to load profile (${response.statusCode})');
     }
   }
 
@@ -195,10 +223,14 @@ static Future<BookingModel> declineBooking(int bookingId) async {
       headers: headers,
     );
     if (response.statusCode == 200) {
-      List<dynamic> data = jsonDecode(response.body);
-      return data.map((item) => item.toString()).toList();
+      try {
+        List<dynamic> data = jsonDecode(response.body);
+        return data.map((item) => item.toString()).toList();
+      } catch (e) {
+        throw Exception('Invalid JSON response from server. The server may have returned an HTML error page.');
+      }
     } else {
-      throw Exception('Failed to load photos: ${response.body}');
+      throw Exception('Failed to load photos (${response.statusCode})');
     }
   }
 
@@ -258,9 +290,13 @@ static Future<BookingModel> declineBooking(int bookingId) async {
       headers: headers,
     );
     if (response.statusCode == 200) {
-      return jsonDecode(response.body);
+      try {
+        return jsonDecode(response.body);
+      } catch (e) {
+        throw Exception('Invalid JSON response from server. The server may have returned an HTML error page.');
+      }
     } else {
-      throw Exception('Failed to load ratings: ${response.body}');
+      throw Exception('Failed to load ratings (${response.statusCode})');
     }
   }
 }

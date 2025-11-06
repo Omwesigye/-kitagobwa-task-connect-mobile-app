@@ -68,14 +68,9 @@ class ProviderCard extends StatelessWidget {
       return imageUrl; // Already a full URL
     }
     // Use platform-aware base URL
-<<<<<<< HEAD
-    final String baseUrl =
-        kIsWeb ? "http://127.0.0.1:8000" : "http://10.0.2.2:8000";
-=======
     final String baseUrl = kIsWeb
         ? "http://127.0.0.1:8000"
         : "http://10.0.2.2:8000";
->>>>>>> 442766b (Add admin home and reports screens + backend models for messages, ratings, and reports)
     return '$baseUrl/storage/$imageUrl';
   }
 
@@ -118,15 +113,6 @@ class ProviderCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-<<<<<<< HEAD
-                Text(name,
-                    style: theme.textTheme.titleLarge
-                        ?.copyWith(fontWeight: FontWeight.bold)),
-                const SizedBox(height: 4),
-                Text(service,
-                    style: theme.textTheme.titleMedium
-                        ?.copyWith(color: theme.primaryColor)),
-=======
                 Text(
                   name,
                   style: theme.textTheme.titleLarge?.copyWith(
@@ -140,21 +126,15 @@ class ProviderCard extends StatelessWidget {
                     color: theme.primaryColor,
                   ),
                 ),
->>>>>>> 442766b (Add admin home and reports screens + backend models for messages, ratings, and reports)
                 const SizedBox(height: 8),
                 Row(
                   children: [
                     Icon(Icons.star, color: Colors.amber, size: 20),
                     const SizedBox(width: 4),
-<<<<<<< HEAD
-                    Text(rating.toStringAsFixed(1),
-                        style: theme.textTheme.titleMedium),
-=======
                     Text(
                       rating.toStringAsFixed(1),
                       style: theme.textTheme.titleMedium,
                     ),
->>>>>>> 442766b (Add admin home and reports screens + backend models for messages, ratings, and reports)
                     const SizedBox(width: 12),
                     Icon(Icons.phone, color: theme.iconTheme.color, size: 16),
                     const SizedBox(width: 4),
@@ -180,15 +160,10 @@ class ProviderCard extends StatelessWidget {
               children: [
                 // --- 5. THIS IS THE NEW CHAT BUTTON ---
                 IconButton(
-<<<<<<< HEAD
-                  icon: Icon(Icons.chat_bubble_outline,
-                      color: theme.primaryColor),
-=======
                   icon: Icon(
                     Icons.chat_bubble_outline,
                     color: theme.primaryColor,
                   ),
->>>>>>> 442766b (Add admin home and reports screens + backend models for messages, ratings, and reports)
                   onPressed: () => _openChat(context), // Call the chat function
                   tooltip: 'Chat with $name',
                 ),
@@ -211,25 +186,13 @@ class ProviderCard extends StatelessWidget {
                     backgroundColor: theme.primaryColor,
                     foregroundColor: theme.colorScheme.onPrimary,
                   ),
-<<<<<<< HEAD
-                  child: const Text('Book Now'),
-                ),
-              ],
-            ),
-          )
-=======
                   child: const Text('viewDetails'),
                 ),
               ],
             ),
           ),
->>>>>>> 442766b (Add admin home and reports screens + backend models for messages, ratings, and reports)
         ],
       ),
     );
   }
 }
-<<<<<<< HEAD
-
-=======
->>>>>>> 442766b (Add admin home and reports screens + backend models for messages, ratings, and reports)

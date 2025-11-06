@@ -26,12 +26,9 @@ class AuthController extends Controller
             'telnumber' => 'required_if:role,service_provider|string',
             'service' => 'required_if:role,service_provider|string',
             'description' => 'nullable|string',
-<<<<<<< HEAD
-=======
             // Optional images list (filenames/paths) provided at registration time
             'images' => 'nullable|array',
             'images.*' => 'string',
->>>>>>> 442766b (Add admin home and reports screens + backend models for messages, ratings, and reports)
         ]);
 
         if ($validator->fails()) {
@@ -51,11 +48,7 @@ class AuthController extends Controller
         ]);
 
         if ($request->role === 'service_provider') {
-<<<<<<< HEAD
-            ServiceProvider::create([
-=======
             $provider = ServiceProvider::create([
->>>>>>> 442766b (Add admin home and reports screens + backend models for messages, ratings, and reports)
                 'user_id' => $user->id,
                 'location' => $request->location,
                 'nin' => $request->nin,

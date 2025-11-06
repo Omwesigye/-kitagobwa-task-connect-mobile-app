@@ -157,9 +157,6 @@ class _ReportProblemPageState extends State<ReportProblemPage> {
 
       var streamedResponse = await request.send();
       var response = await http.Response.fromStream(streamedResponse);
-      
-      // --- THIS LINE NOW WORKS ---
-      final responseBody = jsonDecode(response.body);
 
       if (response.statusCode == 201) {
         if (!mounted) return;
@@ -175,7 +172,13 @@ class _ReportProblemPageState extends State<ReportProblemPage> {
         }
 
       } else {
-        final errorMessage = responseBody['message'] ?? 'Failed to submit report';
+        String errorMessage = 'Failed to submit report';
+        try {
+          final responseBody = jsonDecode(response.body);
+          errorMessage = responseBody['message'] ?? 'Failed to submit report';
+        } catch (e) {
+          errorMessage = 'Failed to submit report (${response.statusCode})';
+        }
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

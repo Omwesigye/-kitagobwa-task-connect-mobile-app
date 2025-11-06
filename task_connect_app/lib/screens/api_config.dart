@@ -70,4 +70,11 @@ class ApiConfig {
   // UTILITY
   // -----------------------------
   static String showImage(String filename) => "$baseUrl/image/$filename";
+
+  // -----------------------------
+  // LIVE LOCATIONS
+  // -----------------------------
+  static String postLocation() => "$baseUrl/location";
+  static String getLocations() => "$baseUrl/locations";
+  static String nearbyProviders() => "$baseUrl/providers/nearby";
 }

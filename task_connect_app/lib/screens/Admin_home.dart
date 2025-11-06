@@ -5,6 +5,7 @@ import 'package:task_connect_app/screens/admin_service.dart';
 import '../services/api_service.dart';
 import 'welcome_screen.dart';
 import 'admin_reports.dart';
+import 'live location.dart';
 
 class AdminHome extends StatefulWidget {
   const AdminHome({super.key});
@@ -224,6 +225,19 @@ class _AdminHomeState extends State<AdminHome>
                     context,
                     MaterialPageRoute(
                       builder: (_) => AdminReportsPage(service: service),
+                    ),
+                  );
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.location_on),
+                title: const Text('Live Location'),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const LiveLocationPage(),
                     ),
                   );
                 },

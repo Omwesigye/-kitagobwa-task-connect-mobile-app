@@ -70,16 +70,20 @@ class _ChatScreenState extends State<ChatScreen> {
       });
 
       if (response.statusCode == 200) {
-        final List<dynamic> data = jsonDecode(response.body);
-        setState(() {
-          _messages =
-              data.map((json) => MessageModel.fromJson(json)).toList();
-          _isLoading = false;
-        });
-        // Scroll to bottom after messages are loaded
-        WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
+        try {
+          final List<dynamic> data = jsonDecode(response.body);
+          setState(() {
+            _messages =
+                data.map((json) => MessageModel.fromJson(json)).toList();
+            _isLoading = false;
+          });
+          // Scroll to bottom after messages are loaded
+          WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
+        } catch (e) {
+          throw Exception('Invalid JSON response. The server may have returned an HTML error page.');
+        }
       } else {
-        throw Exception('Failed to load messages');
+        throw Exception('Failed to load messages (${response.statusCode})');
       }
     } catch (e) {
       setState(() {
@@ -120,14 +124,18 @@ class _ChatScreenState extends State<ChatScreen> {
 
       if (response.statusCode == 201) {
         _messageController.clear();
-        // Add message to list locally for instant UI update
-        final newMessage = MessageModel.fromJson(jsonDecode(response.body));
-        setState(() {
-          _messages.add(newMessage);
-        });
-        _scrollToBottom();
+        try {
+          // Add message to list locally for instant UI update
+          final newMessage = MessageModel.fromJson(jsonDecode(response.body));
+          setState(() {
+            _messages.add(newMessage);
+          });
+          _scrollToBottom();
+        } catch (e) {
+          throw Exception('Invalid JSON response. The server may have returned an HTML error page.');
+        }
       } else {
-        throw Exception('Failed to send message');
+        throw Exception('Failed to send message (${response.statusCode})');
       }
     } catch (e) {
       if (mounted) {

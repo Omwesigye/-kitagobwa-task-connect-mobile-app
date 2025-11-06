@@ -21,11 +21,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final TextEditingController ninController = TextEditingController();
   final TextEditingController phoneController = TextEditingController();
   final TextEditingController descriptionController = TextEditingController();
-<<<<<<< HEAD
-=======
+
   // Optional: comma-separated image filenames
   final TextEditingController imagesController = TextEditingController();
->>>>>>> 442766b (Add admin home and reports screens + backend models for messages, ratings, and reports)
+
   // --- 1. ADD LOCATION CONTROLLER ---
   final TextEditingController locationController = TextEditingController();
 
@@ -59,8 +58,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
           'description': descriptionController.text.trim(),
           'location': locationController.text.trim(), // Fix: was missing
         });
-<<<<<<< HEAD
-=======
+
 
         // Include images[] if provided (comma-separated list)
         final raw = imagesController.text.trim();
@@ -74,7 +72,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
             body['images'] = images;
           }
         }
->>>>>>> 442766b (Add admin home and reports screens + backend models for messages, ratings, and reports)
+
       }
       // ---------------------------------------------------
 
@@ -85,39 +83,63 @@ class _SignUpScreenState extends State<SignUpScreen> {
       );
 
       if (!mounted) return;
-      final data = jsonDecode(response.body);
 
       // --- 3. UPDATE SUCCESS LOGIC ---
       // Your backend returns 201 on success
       if (response.statusCode == 201) {
-        
-        final message = data['message'] ?? 'Registration successful.';
-        
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(message),
-            duration: const Duration(seconds: 4),
-            backgroundColor: Colors.green,
-          ),
-        );
-        
-        // As per your AuthController, all users go back to login
-        Future.delayed(const Duration(seconds: 4), () {
-          if (mounted) {
-             // Go to SigninScreen to login
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (_) => const SigninScreen()),
-            );
-          }
-        });
-
+        try {
+          final data = jsonDecode(response.body);
+          final message = data['message'] ?? 'Registration successful.';
+          
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(message),
+              duration: const Duration(seconds: 4),
+              backgroundColor: Colors.green,
+            ),
+          );
+          
+          // As per your AuthController, all users go back to login
+          Future.delayed(const Duration(seconds: 4), () {
+            if (mounted) {
+               // Go to SigninScreen to login
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (_) => const SigninScreen()),
+              );
+            }
+          });
+        } catch (e) {
+          // If JSON parsing fails, show generic success message
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Registration successful.'),
+              duration: Duration(seconds: 4),
+              backgroundColor: Colors.green,
+            ),
+          );
+          Future.delayed(const Duration(seconds: 4), () {
+            if (mounted) {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (_) => const SigninScreen()),
+              );
+            }
+          });
+        }
       } else {
         // Handle validation errors from Laravel
-        String errorMessage = data['message'] ?? 'Registration failed';
-        if (data['errors'] != null) {
-           // Get the first error from the list
-           errorMessage = data['errors'].entries.first.value[0];
+        String errorMessage = 'Registration failed';
+        try {
+          final data = jsonDecode(response.body);
+          errorMessage = data['message'] ?? 'Registration failed';
+          if (data['errors'] != null) {
+             // Get the first error from the list
+             errorMessage = data['errors'].entries.first.value[0];
+          }
+        } catch (e) {
+          // If response is not JSON (e.g., HTML error page), use the status code
+          errorMessage = 'Registration failed (${response.statusCode})';
         }
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(errorMessage, style: const TextStyle(color: Colors.white)), backgroundColor: Colors.red),

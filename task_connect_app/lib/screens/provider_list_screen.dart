@@ -73,7 +73,12 @@ class _ProviderListScreenState extends State<ProviderListScreen> {
       // ---------------------------------
 
       if (response.statusCode == 200) {
-        dynamic decoded = jsonDecode(response.body);
+        dynamic decoded;
+        try {
+          decoded = jsonDecode(response.body);
+        } catch (e) {
+          throw Exception('Invalid JSON response from server. The server may have returned an HTML error page.');
+        }
 
         List<dynamic> list = [];
         if (decoded is List) {

@@ -10,8 +10,6 @@ use Illuminate\Support\Facades\Storage; // For handling file uploads
 class ReportController extends Controller
 {
     /**
-<<<<<<< HEAD
-=======
      * List reports for admin review.
      */
     public function index()
@@ -21,7 +19,6 @@ class ReportController extends Controller
     }
 
     /**
->>>>>>> 442766b (Add admin home and reports screens + backend models for messages, ratings, and reports)
      * Store a newly created report in storage.
      */
     public function store(Request $request)

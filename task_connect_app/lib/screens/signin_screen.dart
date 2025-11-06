@@ -4,13 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:task_connect_app/main_navigation_screen.dart';
-<<<<<<< HEAD
-import 'package:task_connect_app/screens/provider_navigation_screen.dart'; 
-=======
-import 'package:task_connect_app/screens/admin_home.dart';
+import 'package:task_connect_app/screens/Admin_home.dart';
 import 'package:task_connect_app/screens/provider_navigation_screen.dart';
-
->>>>>>> 442766b (Add admin home and reports screens + backend models for messages, ratings, and reports)
 
 class SigninScreen extends StatefulWidget {
   const SigninScreen({super.key});
@@ -58,109 +53,99 @@ class _SigninScreenState extends State<SigninScreen> {
         body: jsonEncode(body),
       );
 
-      final data = jsonDecode(response.body);
-
       if (response.statusCode == 200) {
-<<<<<<< HEAD
-        // --- 1. EXTRACT ALL DATA FROM LOGIN ---
-        final userId = data['user'] != null ? data['user']['id'] : null;
-        final String userRole = data['user'] != null ? data['user']['role'] : 'user';
-        final String? token = data['token']; // Get the token
-        // ----------------------------------------
-=======
-        final userId = data['user']?['id'];
-        final String userRole = data['user']?['role'] ?? 'user';
-        final String? token = data['token'];
->>>>>>> 442766b (Add admin home and reports screens + backend models for messages, ratings, and reports)
+        try {
+          final Map<String, dynamic> data =
+              (jsonDecode(response.body) as Map).cast<String, dynamic>();
+          // Extract user data and token safely
+          final Map<String, dynamic>? user =
+              data['user'] is Map ? (data['user'] as Map).cast<String, dynamic>() : null;
+          final dynamic rawId = user != null ? user['id'] : null;
+          final int? userId = rawId is int
+              ? rawId
+              : (rawId is num
+                  ? rawId.toInt()
+                  : (rawId is String ? int.tryParse(rawId) : null));
+          final String userRole = (user != null && user['role'] != null)
+              ? user['role'].toString()
+              : 'user';
+          final String? token = data['token'] as String?;
 
-        if (userId == null || token == null) {
+          if (userId == null || token == null) {
+            if (!mounted) return;
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Login failed: User data or token missing')),
+            );
+            return;
+          }
+
+          // Save to SharedPreferences
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setInt('userId', userId!);
+          await prefs.setBool('isLoggedIn', true);
+          await prefs.setString('userRole', userRole);
+          await prefs.setString('auth_token', token);
+          await prefs.setString('user_id', userId!.toString());
+
+          if (!mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Login failed: User data or token missing')),
+            SnackBar(content: Text('Login successful as $userRole')),
           );
-          return;
+
+          // Navigate based on role
+          if (userRole == 'admin') {
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (_) => const AdminHome()),
+              (route) => false,
+            );
+          } else if (userRole == 'service_provider') {
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (_) => ProviderNavigationScreen(userId: userId)),
+              (route) => false,
+            );
+          } else {
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (_) => MainNavigationScreen(userId: userId)),
+              (route) => false,
+            );
+          }
+        } catch (e) {
+          // If JSON parsing fails, show error
+          if (!mounted) return;
+          setState(() => isLoading = false);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Invalid response from server. Please check your connection.')),
+          );
         }
 
-<<<<<<< HEAD
-        // --- 2. SAVE EVERYTHING TO SharedPreferences ---
-=======
->>>>>>> 442766b (Add admin home and reports screens + backend models for messages, ratings, and reports)
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setInt('userId', userId);
-        await prefs.setBool('isLoggedIn', true);
-        await prefs.setString('userRole', userRole);
-<<<<<<< HEAD
-        await prefs.setString('auth_token', token); // ⇐ CRITICAL STEP
-        // ---------------------------------------------
-=======
-        await prefs.setString('auth_token', token);
->>>>>>> 442766b (Add admin home and reports screens + backend models for messages, ratings, and reports)
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Login successful as $userRole')),
-        );
-
-<<<<<<< HEAD
-        // --- 3. NAVIGATE BASED ON ROLE ---
-        if (userRole == 'service_provider') {
-          Navigator.pushAndRemoveUntil(
-            context,
-            MaterialPageRoute(
-              builder: (_) => ProviderNavigationScreen(userId: userId),
-            ),
-=======
-        // Role-based navigation
-        if (userRole == 'admin') {
-          Navigator.pushAndRemoveUntil(
-            context,
-            MaterialPageRoute(builder: (_) => const AdminHome()),
-            (route) => false,
-          );
-        } else if (userRole == 'service_provider') {
-          Navigator.pushAndRemoveUntil(
-            context,
-            MaterialPageRoute(builder: (_) => ProviderNavigationScreen(userId: userId)),
->>>>>>> 442766b (Add admin home and reports screens + backend models for messages, ratings, and reports)
-            (route) => false,
-          );
-        } else {
-          Navigator.pushAndRemoveUntil(
-            context,
-<<<<<<< HEAD
-            MaterialPageRoute(
-              builder: (_) => MainNavigationScreen(userId: userId),
-            ),
-            (route) => false,
-          );
-        }
-        // ---------------------------------
-=======
-            MaterialPageRoute(builder: (_) => MainNavigationScreen(userId: userId)),
-            (route) => false,
-          );
-        }
->>>>>>> 442766b (Add admin home and reports screens + backend models for messages, ratings, and reports)
       } else {
+        if (!mounted) return;
+        String errorMessage = 'Login failed';
+        try {
+          final data = jsonDecode(response.body);
+          errorMessage = data['message'] ?? 'Login failed';
+        } catch (e) {
+          // If response is not JSON (e.g., HTML error page), use the status code
+          errorMessage = 'Login failed (${response.statusCode})';
+        }
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(data['message'] ?? 'Login failed')),
+          SnackBar(content: Text(errorMessage)),
         );
       }
     } catch (e) {
-<<<<<<< HEAD
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Error connecting to $apiUrl. $e')));
-=======
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error connecting to $apiUrl. $e')),
+        SnackBar(content: Text('Error connecting to $apiUrl: $e')),
       );
->>>>>>> 442766b (Add admin home and reports screens + backend models for messages, ratings, and reports)
     } finally {
       if (!mounted) return;
       setState(() => isLoading = false);
     }
   }
-  
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -174,14 +159,14 @@ class _SigninScreenState extends State<SigninScreen> {
           key: _formKey,
           child: Column(
             children: [
-              // Role selection now includes admin
+              // Role selection
               DropdownButtonFormField<String>(
                 value: selectedRole,
                 decoration: const InputDecoration(labelText: 'Login as'),
                 items: const [
                   DropdownMenuItem(value: 'user', child: Text('User')),
                   DropdownMenuItem(value: 'service_provider', child: Text('Service Provider')),
-                  DropdownMenuItem(value: 'admin', child: Text('Admin')), // ✅
+                  DropdownMenuItem(value: 'admin', child: Text('Admin')),
                 ],
                 onChanged: (value) => setState(() => selectedRole = value!),
               ),
@@ -236,6 +221,7 @@ class _SigninScreenState extends State<SigninScreen> {
                 ),
               const SizedBox(height: 30),
 
+              // Sign In button
               isLoading
                   ? const CircularProgressIndicator()
                   : ElevatedButton(
@@ -266,4 +252,3 @@ class _SigninScreenState extends State<SigninScreen> {
     );
   }
 }
-

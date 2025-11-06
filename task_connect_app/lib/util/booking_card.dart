@@ -84,21 +84,39 @@ class _BookingsCardState extends State<BookingsCard> {
       );
 
       if (!mounted) return;
-      final body = jsonDecode(response.body);
-
+      
       if (response.statusCode == 201) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Review submitted successfully!'),
-            backgroundColor: Colors.green,
-          ),
-        );
-        // Call the callback to refresh the bookings list
-        widget.onRatingSubmitted();
+        try {
+          final body = jsonDecode(response.body);
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Review submitted successfully!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+          // Call the callback to refresh the bookings list
+          widget.onRatingSubmitted();
+        } catch (e) {
+          // If JSON parsing fails, still show success (the server accepted it)
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Review submitted successfully!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+          widget.onRatingSubmitted();
+        }
       } else {
+        String errorMessage = 'Failed to submit review';
+        try {
+          final body = jsonDecode(response.body);
+          errorMessage = body['message'] ?? 'Failed to submit review';
+        } catch (e) {
+          errorMessage = 'Failed to submit review (${response.statusCode})';
+        }
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error: ${body['message']}'),
+            content: Text('Error: $errorMessage'),
             backgroundColor: Colors.red,
           ),
         );
