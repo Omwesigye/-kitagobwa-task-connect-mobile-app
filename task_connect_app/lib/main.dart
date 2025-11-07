@@ -13,6 +13,7 @@ void main() async {
   final bool isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
   final int userId = prefs.getInt('userId') ?? 0;
 
+  // --- 2. PASS THE VALUES TO THE APP ---
   runApp(MyApp(isLoggedIn: isLoggedIn, userId: userId));
 }
 
@@ -20,11 +21,8 @@ class MyApp extends StatelessWidget {
   final bool isLoggedIn;
   final int userId;
 
-  const MyApp({
-    super.key,
-    required this.isLoggedIn,
-    required this.userId,
-  });
+  const MyApp({super.key, required this.isLoggedIn, required this.userId});
+  // --------------------------------
 
   @override
   Widget build(BuildContext context) {
@@ -35,9 +33,15 @@ class MyApp extends StatelessWidget {
           return MaterialApp(
             title: 'Task Connect App',
             debugShowCheckedModeBanner: false,
+
+            // --- 4. CHOOSE THE CORRECT STARTING SCREEN ---
             home: isLoggedIn && userId != 0
-                ? MainNavigationScreen(userId: userId)
-                : const WelcomeScreen(),
+                ? MainNavigationScreen(
+                    userId: userId,
+                  ) // If logged in, go to main app
+                : const WelcomeScreen(), // If not, go to welcome screen
+
+            // -----------------------------------------
             theme: TAppTheme.lightTheme,
             darkTheme: TAppTheme.darkTheme,
             themeMode: themeProvider.themeData.brightness == Brightness.light

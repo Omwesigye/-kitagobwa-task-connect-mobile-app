@@ -10,13 +10,16 @@ use App\Http\Controllers\Api\ReportController;
 use App\Http\Controllers\Api\RatingController;
 use App\Http\Controllers\Api\ChatController;
 use App\Http\Controllers\Api\ProviderProfileController;
-use App\Http\Controllers\Api\LocationController;
 
 /*
 |--------------------------------------------------------------------------
 | API Routes
 |--------------------------------------------------------------------------
-| Public and Protected API endpoints
+|
+| Here is where you can register API routes for your application. 
+| These routes are loaded by the RouteServiceProvider within a group 
+| which is assigned the "api" middleware group. Enjoy building your API!
+|
 */
 
 // --------------------
@@ -27,12 +30,15 @@ Route::post('/login', [AuthController::class, 'login']);
 
 Route::post('/reports', [ReportController::class, 'store']);
 Route::post('/ratings', [RatingController::class, 'store']);
-// Live locations (public GET, POST may be protected later)
-Route::get('/locations', [LocationController::class, 'index']);
-Route::middleware('auth:sanctum')->group(function () {
-    Route::post('/location', [LocationController::class, 'store']);
-    Route::get('/providers/nearby', [LocationController::class, 'nearbyProviders']);
-});
+Route::get('/service-providers', [ServiceProviderController::class, 'index']);
+Route::get('/providers', [ServiceProviderController::class, 'index']);
+Route::get('/image/{filename}', [ServiceProviderController::class, 'showImage']);
+// Chat routes
+Route::post('/chat/send', [ChatController::class, 'sendMessage']);
+Route::get('/chat/history/{userId}/{contactId}', [ChatController::class, 'getConversation']);
+
+Route::post('/reports', [ReportController::class, 'store']);
+Route::post('/ratings', [RatingController::class, 'store']);
 
 Route::get('/service-providers', [ServiceProviderController::class, 'index']);
 Route::get('/providers', [ServiceProviderController::class, 'index']); // Alias
@@ -73,9 +79,9 @@ Route::middleware('auth:sanctum')->group(function () {
     // --------------------
     // BOOKING ROUTES
     // --------------------
-    Route::post('/bookings', [BookingController::class, 'store']);
-    Route::get('/bookings', [BookingController::class, 'index']);
-    Route::delete('/bookings/{id}', [BookingController::class, 'destroy']);
+    Route::post('/bookings', [BookingController::class, 'store']); 
+    Route::get('/bookings', [BookingController::class, 'index']); 
+    Route::delete('/bookings/{id}', [BookingController::class, 'destroy']); 
     Route::get('/provider/bookings', [BookingController::class, 'getProviderBookings']);
     Route::post('/bookings/{id}/accept', [BookingController::class, 'acceptBooking']);
     Route::post('/bookings/{id}/decline', [BookingController::class, 'declineBooking']);

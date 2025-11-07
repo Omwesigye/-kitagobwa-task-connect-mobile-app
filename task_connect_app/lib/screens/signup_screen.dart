@@ -21,10 +21,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final TextEditingController ninController = TextEditingController();
   final TextEditingController phoneController = TextEditingController();
   final TextEditingController descriptionController = TextEditingController();
-
   // Optional: comma-separated image filenames
   final TextEditingController imagesController = TextEditingController();
-
   // --- 1. ADD LOCATION CONTROLLER ---
   final TextEditingController locationController = TextEditingController();
 
@@ -59,7 +57,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
           'location': locationController.text.trim(), // Fix: was missing
         });
 
-
         // Include images[] if provided (comma-separated list)
         final raw = imagesController.text.trim();
         if (raw.isNotEmpty) {
@@ -72,7 +69,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
             body['images'] = images;
           }
         }
-
       }
       // ---------------------------------------------------
 

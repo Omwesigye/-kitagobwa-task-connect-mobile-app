@@ -4,8 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:task_connect_app/main_navigation_screen.dart';
-import 'package:task_connect_app/screens/Admin_home.dart';
+import 'package:task_connect_app/screens/admin_home.dart';
 import 'package:task_connect_app/screens/provider_navigation_screen.dart';
+
 
 class SigninScreen extends StatefulWidget {
   const SigninScreen({super.key});
@@ -15,6 +16,7 @@ class SigninScreen extends StatefulWidget {
 }
 
 class _SigninScreenState extends State<SigninScreen> {
+  // --- 1. ADD THESE MISSING VARIABLE DECLARATIONS ---
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
   final TextEditingController emailController = TextEditingController();
@@ -24,10 +26,13 @@ class _SigninScreenState extends State<SigninScreen> {
   String selectedRole = 'user';
   bool hidePassword = true;
   bool isLoading = false;
+  // ---------------------------------------------------
 
   Future<void> loginUser() async {
     if (!_formKey.currentState!.validate()) return;
 
+    // Add mounted check
+    if (!mounted) return;
     setState(() => isLoading = true);
 
     final Map<String, dynamic> body = {
@@ -53,23 +58,14 @@ class _SigninScreenState extends State<SigninScreen> {
         body: jsonEncode(body),
       );
 
+      // Add mounted check
+      if (!mounted) return;
+      final data = jsonDecode(response.body);
+
       if (response.statusCode == 200) {
-        try {
-          final Map<String, dynamic> data =
-              (jsonDecode(response.body) as Map).cast<String, dynamic>();
-          // Extract user data and token safely
-          final Map<String, dynamic>? user =
-              data['user'] is Map ? (data['user'] as Map).cast<String, dynamic>() : null;
-          final dynamic rawId = user != null ? user['id'] : null;
-          final int? userId = rawId is int
-              ? rawId
-              : (rawId is num
-                  ? rawId.toInt()
-                  : (rawId is String ? int.tryParse(rawId) : null));
-          final String userRole = (user != null && user['role'] != null)
-              ? user['role'].toString()
-              : 'user';
-          final String? token = data['token'] as String?;
+        final userId = data['user']?['id'];
+        final String userRole = data['user']?['role'] ?? 'user';
+        final String? token = data['token'];
 
           if (userId == null || token == null) {
             if (!mounted) return;
@@ -79,48 +75,37 @@ class _SigninScreenState extends State<SigninScreen> {
             return;
           }
 
-          // Save to SharedPreferences
-          final prefs = await SharedPreferences.getInstance();
-          await prefs.setInt('userId', userId!);
-          await prefs.setBool('isLoggedIn', true);
-          await prefs.setString('userRole', userRole);
-          await prefs.setString('auth_token', token);
-          await prefs.setString('user_id', userId!.toString());
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setInt('userId', userId);
+        await prefs.setBool('isLoggedIn', true);
+        await prefs.setString('userRole', userRole);
+        await prefs.setString('auth_token', token);
 
           if (!mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Login successful as $userRole')),
           );
 
-          // Navigate based on role
-          if (userRole == 'admin') {
-            Navigator.pushAndRemoveUntil(
-              context,
-              MaterialPageRoute(builder: (_) => const AdminHome()),
-              (route) => false,
-            );
-          } else if (userRole == 'service_provider') {
-            Navigator.pushAndRemoveUntil(
-              context,
-              MaterialPageRoute(builder: (_) => ProviderNavigationScreen(userId: userId)),
-              (route) => false,
-            );
-          } else {
-            Navigator.pushAndRemoveUntil(
-              context,
-              MaterialPageRoute(builder: (_) => MainNavigationScreen(userId: userId)),
-              (route) => false,
-            );
-          }
-        } catch (e) {
-          // If JSON parsing fails, show error
-          if (!mounted) return;
-          setState(() => isLoading = false);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Invalid response from server. Please check your connection.')),
+        // Role-based navigation
+        if (userRole == 'admin') {
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (_) => const AdminHome()),
+            (route) => false,
+          );
+        } else if (userRole == 'service_provider') {
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (_) => ProviderNavigationScreen(userId: userId)),
+            (route) => false,
+          );
+        } else {
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (_) => MainNavigationScreen(userId: userId)),
+            (route) => false,
           );
         }
-
       } else {
         if (!mounted) return;
         String errorMessage = 'Login failed';
@@ -161,7 +146,7 @@ class _SigninScreenState extends State<SigninScreen> {
             children: [
               // Role selection
               DropdownButtonFormField<String>(
-                value: selectedRole,
+                initialValue: selectedRole,
                 decoration: const InputDecoration(labelText: 'Login as'),
                 items: const [
                   DropdownMenuItem(value: 'user', child: Text('User')),

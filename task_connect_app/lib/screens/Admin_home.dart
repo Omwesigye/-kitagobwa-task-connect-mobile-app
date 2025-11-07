@@ -367,7 +367,7 @@ class _AdminHomeState extends State<AdminHome>
                   ],
                 ),
               ),
-              ButtonBar(
+              OverflowBar(
                 children: [
                   TextButton.icon(
                     onPressed: () => approveProvider(provider['id']),
