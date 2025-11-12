@@ -5,8 +5,8 @@ class WelcomeButton extends StatelessWidget {
     super.key,
     required this.buttonText,
     this.onTap,
-    this.color,     // optional, can fallback to theme
-    this.textColor, // optional, can fallback to theme
+    this.color,
+    this.textColor,
   });
 
   final String buttonText;
@@ -17,23 +17,35 @@ class WelcomeButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final bgColor = color ?? (theme.brightness == Brightness.dark ? Colors.white10 : Colors.white);
-    final fgColor = textColor ?? (theme.brightness == Brightness.dark ? Colors.white : Colors.black);
+
+    final bgColor =
+        color ??
+        (theme.brightness == Brightness.dark ? Colors.white10 : Colors.white);
+    final fgColor =
+        textColor ??
+        (theme.brightness == Brightness.dark ? Colors.white : Colors.black);
 
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.all(30.0),
+        height: 52, // << Medium button height
+        alignment: Alignment.center,
         decoration: BoxDecoration(
           color: bgColor,
-          borderRadius: const BorderRadius.only(topLeft: Radius.circular(50)),
+          borderRadius: BorderRadius.circular(30), // << Fully rounded (pill)
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 6,
+              offset: const Offset(0, 3),
+            ),
+          ],
         ),
         child: Text(
           buttonText,
-          textAlign: TextAlign.center,
           style: TextStyle(
-            fontSize: 20.0,
-            fontWeight: FontWeight.bold,
+            fontSize: 17,
+            fontWeight: FontWeight.w600,
             color: fgColor,
           ),
         ),

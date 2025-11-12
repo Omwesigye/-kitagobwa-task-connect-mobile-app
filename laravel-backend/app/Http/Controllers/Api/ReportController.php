@@ -12,9 +12,17 @@ class ReportController extends Controller
     /**
      * List reports for admin review.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $reports = Report::with('user')->orderByDesc('created_at')->get();
+        // Check if user is admin
+        $user = $request->user();
+        if (!$user || $user->role !== 'admin') {
+            return response()->json([
+                'message' => 'Unauthorized. Admin access required.'
+            ], 403);
+        }
+
+        $reports = Report::with('user:id,name,email')->orderByDesc('created_at')->get();
         return response()->json($reports);
     }
 

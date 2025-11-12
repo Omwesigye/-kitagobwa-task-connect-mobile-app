@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 // 1. --- ADD CHAT SCREEN IMPORT ---
 import 'package:task_connect_app/screens/chat_screen.dart';
 import 'package:flutter/foundation.dart' show kIsWeb; // For image URL logic
+import 'package:task_connect_app/screens/api_config.dart';
 
 class ProviderCard extends StatelessWidget {
   // Your existing fields
@@ -65,13 +66,10 @@ class ProviderCard extends StatelessWidget {
   // --- Helper to fix image URLs ---
   String _getImageUrl(String imageUrl) {
     if (imageUrl.startsWith('http')) {
-      return imageUrl; // Already a full URL
+      return _normalizeAbsoluteUrl(imageUrl); // Already a full URL
     }
-    // Use platform-aware base URL
-    final String baseUrl = kIsWeb
-        ? "http://127.0.0.1:8000"
-        : "http://10.0.2.2:8000";
-    return '$baseUrl/storage/$imageUrl';
+    // Use centralized public base URL
+    return '${ApiConfig.publicBaseUrl}/storage/$imageUrl';
   }
 
   @override
@@ -80,6 +78,7 @@ class ProviderCard extends StatelessWidget {
 
     // This is the new UI layout that includes the chat button
     return Card(
+      color: Colors.white,
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       clipBehavior: Clip.antiAlias, // Ensures image respects the border
@@ -97,10 +96,10 @@ class ProviderCard extends StatelessWidget {
                 return Container(
                   height: 150,
                   width: double.infinity,
-                  color: Colors.grey[200],
+                  color: theme.colorScheme.surfaceVariant,
                   child: Icon(
                     Icons.broken_image,
-                    color: Colors.grey[400],
+                    color: theme.colorScheme.onSurfaceVariant,
                     size: 40,
                   ),
                 );
@@ -123,7 +122,7 @@ class ProviderCard extends StatelessWidget {
                 Text(
                   service,
                   style: theme.textTheme.titleMedium?.copyWith(
-                    color: theme.primaryColor,
+                    color: theme.colorScheme.primary,
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -136,7 +135,12 @@ class ProviderCard extends StatelessWidget {
                       style: theme.textTheme.titleMedium,
                     ),
                     const SizedBox(width: 12),
-                    Icon(Icons.phone, color: theme.iconTheme.color, size: 16),
+                    Icon(
+                      Icons.phone,
+                      color: theme.colorScheme.onSurface,
+                      size: 16,
+                    ),
+
                     const SizedBox(width: 4),
                     Text(telnumber, style: theme.textTheme.bodyMedium),
                   ],
@@ -162,7 +166,7 @@ class ProviderCard extends StatelessWidget {
                 IconButton(
                   icon: Icon(
                     Icons.chat_bubble_outline,
-                    color: theme.primaryColor,
+                    color: theme.colorScheme.primary,
                   ),
                   onPressed: () => _openChat(context), // Call the chat function
                   tooltip: 'Chat with $name',
@@ -183,7 +187,7 @@ class ProviderCard extends StatelessWidget {
                 ElevatedButton(
                   onPressed: onBook,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: theme.primaryColor,
+                    backgroundColor: theme.colorScheme.primary,
                     foregroundColor: theme.colorScheme.onPrimary,
                   ),
                   child: const Text('viewDetails'),
@@ -195,4 +199,26 @@ class ProviderCard extends StatelessWidget {
       ),
     );
   }
+}
+
+String _normalizeAbsoluteUrl(String url) {
+  final uri = Uri.tryParse(url);
+  if (uri == null || !uri.hasScheme || !uri.hasAuthority) {
+    return url;
+  }
+
+  final host = uri.host.toLowerCase();
+  if (host == 'localhost' || host == '127.0.0.1') {
+    final base = Uri.parse(ApiConfig.publicBaseUrl);
+    return Uri(
+      scheme: base.scheme,
+      host: base.host,
+      port: base.hasPort ? base.port : null,
+      path: uri.path,
+      query: uri.query.isEmpty ? null : uri.query,
+      fragment: uri.fragment.isEmpty ? null : uri.fragment,
+    ).toString();
+  }
+
+  return url;
 }

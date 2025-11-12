@@ -145,8 +145,9 @@ class _AdminHomeState extends State<AdminHome>
   Future<void> deleteUser(int id) async {
     try {
       await service.deleteUser(id);
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text("User deleted")));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("User deleted")));
       setState(() => users.removeWhere((u) => u['id'] == id));
     } catch (e) {
       _showError('Error deleting user: $e');
@@ -156,8 +157,9 @@ class _AdminHomeState extends State<AdminHome>
   Future<void> deleteProvider(int id) async {
     try {
       await service.deleteProvider(id);
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text("Provider deleted")));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Provider deleted")));
       setState(() {
         pendingProviders.removeWhere((p) => p['id'] == id);
         allProviders.removeWhere((p) => p['id'] == id);
@@ -188,8 +190,9 @@ class _AdminHomeState extends State<AdminHome>
   Future<void> updateBookingStatus(int id, String status) async {
     try {
       await service.updateBookingStatus(id, status);
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text("Booking updated")));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Booking updated")));
       fetchBookings();
     } catch (e) {
       _showError('Error updating booking: $e');
@@ -198,7 +201,9 @@ class _AdminHomeState extends State<AdminHome>
 
   // ---------------- UTILITY ----------------
   void _showError(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
@@ -212,7 +217,10 @@ class _AdminHomeState extends State<AdminHome>
               const ListTile(
                 title: Text(
                   'Admin Menu',
-                  style: TextStyle(fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.blue,
+                  ),
                 ),
               ),
               const Divider(),
@@ -236,16 +244,17 @@ class _AdminHomeState extends State<AdminHome>
                   Navigator.pop(context);
                   Navigator.push(
                     context,
-                    MaterialPageRoute(
-                      builder: (_) => const LiveLocationPage(),
-                    ),
+                    MaterialPageRoute(builder: (_) => const LiveLocationPage()),
                   );
                 },
               ),
               const Spacer(),
               ListTile(
                 leading: const Icon(Icons.logout),
-                title: const Text('Logout'),
+                title: const Text(
+                  'Logout',
+                  style: TextStyle(color: Colors.lightBlue),
+                ),
                 onTap: _logout,
               ),
             ],
@@ -254,40 +263,66 @@ class _AdminHomeState extends State<AdminHome>
       ),
       appBar: AppBar(
         title: const Text("Admin Dashboard"),
+        centerTitle: true,
         actions: [
           IconButton(
             tooltip: 'Logout',
-            icon: const Icon(Icons.logout),
+            icon: const Icon(Icons.logout, color: Colors.blueAccent),
             onPressed: _logout,
           ),
         ],
         bottom: TabBar(
           controller: _tabController,
           tabs: [
-            Tab(icon: const Icon(Icons.people), text: 'Users (${users.length})'),
             Tab(
-                icon: const Icon(Icons.hourglass_bottom),
-                text: 'Pending (${pendingProviders.length})'),
-            Tab(icon: const Icon(Icons.badge), text: 'Providers (${allProviders.length})'),
-            Tab(icon: const Icon(Icons.event_note), text: 'Bookings (${bookings.length})'),
+              icon: const Icon(Icons.people),
+              text: 'Users (${users.length})',
+            ),
+            Tab(
+              icon: const Icon(Icons.hourglass_bottom),
+              text: 'Pending (${pendingProviders.length})',
+            ),
+            Tab(
+              icon: const Icon(Icons.badge),
+              text: 'Providers (${allProviders.length})',
+            ),
+            Tab(
+              icon: const Icon(Icons.event_note),
+              text: 'Bookings (${bookings.length})',
+            ),
           ],
         ),
       ),
-      body: TabBarView(
-        controller: _tabController,
-        children: [
-          _buildUsersTab(),
-          _buildPendingProvidersTab(),
-          _buildAllProvidersTab(),
-          _buildBookingsTab(),
-        ],
+      body: Container(
+        width: double.infinity,
+        height: double.infinity,
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Color(0xFFB3E5FC), // same soft sky blue
+              Color.fromARGB(255, 170, 198, 218),
+            ],
+          ),
+        ),
+        child: TabBarView(
+          controller: _tabController,
+          children: [
+            _buildUsersTab(),
+            _buildPendingProvidersTab(),
+            _buildAllProvidersTab(),
+            _buildBookingsTab(),
+          ],
+        ),
       ),
     );
   }
 
   // ---------------- TAB WIDGETS ----------------
   Widget _buildUsersTab() {
-    if (tabLoading['users']!) return const Center(child: CircularProgressIndicator());
+    if (tabLoading['users']!)
+      return const Center(child: CircularProgressIndicator());
     if (users.isEmpty) return const Center(child: Text("No users available"));
 
     return ListView.separated(
@@ -297,12 +332,18 @@ class _AdminHomeState extends State<AdminHome>
       itemBuilder: (context, index) {
         final user = users[index];
         return Card(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
           elevation: 2,
           child: ExpansionTile(
             leading: CircleAvatar(
               child: Text(
-                (user['name'] ?? '?').toString().trim().substring(0, 1).toUpperCase(),
+                (user['name'] ?? '?')
+                    .toString()
+                    .trim()
+                    .substring(0, 1)
+                    .toUpperCase(),
               ),
             ),
             title: Text(user['name'] ?? 'Unknown'),
@@ -320,10 +361,14 @@ class _AdminHomeState extends State<AdminHome>
                     KeyValueRow(label: 'ID', value: user['id']?.toString()),
                     KeyValueRow(label: 'Role', value: user['role']?.toString()),
                     KeyValueRow(
-                        label: 'Approved',
-                        value: (user['is_approved'] == 1).toString()),
+                      label: 'Approved',
+                      value: (user['is_approved'] == 1).toString(),
+                    ),
                     if (user['created_at'] != null)
-                      KeyValueRow(label: 'Created', value: user['created_at'].toString()),
+                      KeyValueRow(
+                        label: 'Created',
+                        value: user['created_at'].toString(),
+                      ),
                   ],
                 ),
               ),
@@ -335,8 +380,10 @@ class _AdminHomeState extends State<AdminHome>
   }
 
   Widget _buildPendingProvidersTab() {
-    if (tabLoading['pendingProviders']!) return const Center(child: CircularProgressIndicator());
-    if (pendingProviders.isEmpty) return const Center(child: Text("No pending providers"));
+    if (tabLoading['pendingProviders']!)
+      return const Center(child: CircularProgressIndicator());
+    if (pendingProviders.isEmpty)
+      return const Center(child: Text("No pending providers"));
 
     return ListView.separated(
       padding: const EdgeInsets.all(12),
@@ -346,7 +393,9 @@ class _AdminHomeState extends State<AdminHome>
         final provider = pendingProviders[index];
         final user = provider['user'] ?? {};
         return Card(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
           elevation: 2,
           child: ExpansionTile(
             leading: const Icon(Icons.pending_actions),
@@ -358,12 +407,30 @@ class _AdminHomeState extends State<AdminHome>
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    KeyValueRow(label: 'User ID', value: user['id']?.toString()),
-                    KeyValueRow(label: 'Email', value: user['email']?.toString()),
-                    KeyValueRow(label: 'Location', value: provider['location']?.toString()),
-                    KeyValueRow(label: 'Tel', value: provider['telnumber']?.toString()),
-                    KeyValueRow(label: 'NIN', value: provider['nin']?.toString()),
-                    KeyValueRow(label: 'Description', value: provider['description']?.toString()),
+                    KeyValueRow(
+                      label: 'User ID',
+                      value: user['id']?.toString(),
+                    ),
+                    KeyValueRow(
+                      label: 'Email',
+                      value: user['email']?.toString(),
+                    ),
+                    KeyValueRow(
+                      label: 'Location',
+                      value: provider['location']?.toString(),
+                    ),
+                    KeyValueRow(
+                      label: 'Tel',
+                      value: provider['telnumber']?.toString(),
+                    ),
+                    KeyValueRow(
+                      label: 'NIN',
+                      value: provider['nin']?.toString(),
+                    ),
+                    KeyValueRow(
+                      label: 'Description',
+                      value: provider['description']?.toString(),
+                    ),
                   ],
                 ),
               ),
@@ -389,8 +456,10 @@ class _AdminHomeState extends State<AdminHome>
   }
 
   Widget _buildAllProvidersTab() {
-    if (tabLoading['allProviders']!) return const Center(child: CircularProgressIndicator());
-    if (allProviders.isEmpty) return const Center(child: Text("No providers available"));
+    if (tabLoading['allProviders']!)
+      return const Center(child: CircularProgressIndicator());
+    if (allProviders.isEmpty)
+      return const Center(child: Text("No providers available"));
 
     return ListView.separated(
       padding: const EdgeInsets.all(12),
@@ -400,7 +469,9 @@ class _AdminHomeState extends State<AdminHome>
         final provider = allProviders[index];
         final user = provider['user'] ?? {};
         return Card(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
           elevation: 2,
           child: ExpansionTile(
             leading: const Icon(Icons.badge),
@@ -416,12 +487,30 @@ class _AdminHomeState extends State<AdminHome>
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    KeyValueRow(label: 'User ID', value: user['id']?.toString()),
-                    KeyValueRow(label: 'Email', value: user['email']?.toString()),
-                    KeyValueRow(label: 'Location', value: provider['location']?.toString()),
-                    KeyValueRow(label: 'Tel', value: provider['telnumber']?.toString()),
-                    KeyValueRow(label: 'NIN', value: provider['nin']?.toString()),
-                    KeyValueRow(label: 'Description', value: provider['description']?.toString()),
+                    KeyValueRow(
+                      label: 'User ID',
+                      value: user['id']?.toString(),
+                    ),
+                    KeyValueRow(
+                      label: 'Email',
+                      value: user['email']?.toString(),
+                    ),
+                    KeyValueRow(
+                      label: 'Location',
+                      value: provider['location']?.toString(),
+                    ),
+                    KeyValueRow(
+                      label: 'Tel',
+                      value: provider['telnumber']?.toString(),
+                    ),
+                    KeyValueRow(
+                      label: 'NIN',
+                      value: provider['nin']?.toString(),
+                    ),
+                    KeyValueRow(
+                      label: 'Description',
+                      value: provider['description']?.toString(),
+                    ),
                   ],
                 ),
               ),
@@ -433,8 +522,10 @@ class _AdminHomeState extends State<AdminHome>
   }
 
   Widget _buildBookingsTab() {
-    if (tabLoading['bookings']!) return const Center(child: CircularProgressIndicator());
-    if (bookings.isEmpty) return const Center(child: Text("No bookings available"));
+    if (tabLoading['bookings']!)
+      return const Center(child: CircularProgressIndicator());
+    if (bookings.isEmpty)
+      return const Center(child: Text("No bookings available"));
 
     return ListView.separated(
       padding: const EdgeInsets.all(12),
@@ -443,12 +534,18 @@ class _AdminHomeState extends State<AdminHome>
       itemBuilder: (context, index) {
         final booking = bookings[index];
         return Card(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
           elevation: 2,
           child: ExpansionTile(
             leading: const Icon(Icons.event_note),
-            title: Text("${booking['user_name']} → ${booking['provider_name']}"),
-            subtitle: Text("${booking['service']} at ${booking['date']} ${booking['time']}"),
+            title: Text(
+              "${booking['user_name']} → ${booking['provider_name']}",
+            ),
+            subtitle: Text(
+              "${booking['service']} at ${booking['date']} ${booking['time']}",
+            ),
             trailing: PopupMenuButton<String>(
               onSelected: (value) => updateBookingStatus(booking['id'], value),
               itemBuilder: (context) => const [
@@ -462,12 +559,24 @@ class _AdminHomeState extends State<AdminHome>
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    KeyValueRow(label: 'Booking ID', value: booking['id']?.toString()),
-                    KeyValueRow(label: 'Status', value: booking['status']?.toString()),
+                    KeyValueRow(
+                      label: 'Booking ID',
+                      value: booking['id']?.toString(),
+                    ),
+                    KeyValueRow(
+                      label: 'Status',
+                      value: booking['status']?.toString(),
+                    ),
                     if (booking['address'] != null)
-                      KeyValueRow(label: 'Address', value: booking['address'].toString()),
+                      KeyValueRow(
+                        label: 'Address',
+                        value: booking['address'].toString(),
+                      ),
                     if (booking['notes'] != null)
-                      KeyValueRow(label: 'Notes', value: booking['notes'].toString()),
+                      KeyValueRow(
+                        label: 'Notes',
+                        value: booking['notes'].toString(),
+                      ),
                   ],
                 ),
               ),

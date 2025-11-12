@@ -22,4 +22,12 @@ class Report extends Model
         'image_path',
         'status',
     ];
+
+    /**
+     * Get the user that created the report.
+     */
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
 }

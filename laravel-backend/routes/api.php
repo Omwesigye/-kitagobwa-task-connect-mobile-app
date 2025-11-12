@@ -36,7 +36,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
 Route::get('/service-providers', [ServiceProviderController::class, 'index']);
 Route::get('/providers', [ServiceProviderController::class, 'index']); // Alias
-Route::get('/image/{filename}', [ServiceProviderController::class, 'showImage']);
+Route::get('/image/{path}', [ServiceProviderController::class, 'showImage'])
+    ->where('path', '.*');
 
 // Chat (public send + view conversation)
 Route::post('/chat/send', [ChatController::class, 'sendMessage']);

@@ -91,7 +91,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       }
     }
   }
-  
+
   @override
   void dispose() {
     _usernameController.dispose();
@@ -197,17 +197,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   : ElevatedButton(
                       onPressed: _logout,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red[700],
-                        foregroundColor: Colors.white,
+                        backgroundColor: theme.colorScheme.primary,
+                        foregroundColor: theme.colorScheme.onPrimary,
+
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 40, vertical: 12),
+                          horizontal: 40,
+                          vertical: 12,
+                        ),
                       ),
                       child: const Text(
                         'Log Out',
                         style: TextStyle(fontSize: 16),
                       ),
                     ),
-            )
+            ),
             // --------------------------------
           ],
         ),
@@ -215,4 +218,3 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 }
-

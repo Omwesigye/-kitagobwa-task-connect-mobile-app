@@ -22,15 +22,48 @@ class _AdminReportsPageState extends State<AdminReportsPage> {
 
   Future<void> _loadReports() async {
     try {
-      reports = await widget.service.fetchReports();
-    } catch (_) {}
-    if (mounted) setState(() => loading = false);
+      final fetchedReports = await widget.service.fetchReports();
+      if (mounted) {
+        setState(() {
+          reports = fetchedReports;
+          loading = false;
+        });
+      }
+    } catch (e) {
+      print('Error loading reports: $e');
+      if (mounted) {
+        setState(() {
+          loading = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error loading reports: $e'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 5),
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _refreshReports() async {
+    setState(() => loading = true);
+    await _loadReports();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Reports')),
+      appBar: AppBar(
+        title: const Text('Reports'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: loading ? null : _refreshReports,
+            tooltip: 'Refresh',
+          ),
+        ],
+      ),
       body: loading
           ? const Center(child: CircularProgressIndicator())
           : reports.isEmpty

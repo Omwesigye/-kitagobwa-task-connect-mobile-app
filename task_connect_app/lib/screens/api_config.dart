@@ -1,9 +1,39 @@
 // lib/api_config.dart
 import 'package:flutter/foundation.dart';
+import 'dart:io' show Platform;
 
 class ApiConfig {
+  // Optional compile-time overrides:
+  // flutter run -d chrome --dart-define=BACKEND_PUBLIC_BASE=http://localhost/your-path
+  // flutter run -d chrome --dart-define=BACKEND_API_BASE=http://localhost/your-path/api
+  static const String _overridePublicBase =
+      String.fromEnvironment('BACKEND_PUBLIC_BASE', defaultValue: '');
+  static const String _overrideApiBase =
+      String.fromEnvironment('BACKEND_API_BASE', defaultValue: '');
+
   static String get baseUrl {
-    return kIsWeb ? "http://127.0.0.1:8000/api" : "http://10.0.2.2:8000/api";
+    if (_overrideApiBase.isNotEmpty) return _overrideApiBase;
+    // Default: web → localhost:8000/api, android emulator → 10.0.2.2:8000/api
+    return kIsWeb ? "http://localhost:8000/api" : "http://10.0.2.2:8000/api";
+  }
+
+  // Base URL for non-API public resources like /storage/* (no /api suffix)
+  static String get publicBaseUrl {
+    if (_overridePublicBase.isNotEmpty) return _overridePublicBase;
+    if (kIsWeb) {
+      // Prefer localhost for web builds to match common dev servers
+      return "http://localhost:8000";
+    }
+    // On Android emulator use 10.0.2.2; on other platforms (Windows, iOS, macOS)
+    // default to localhost. Adjust if accessing from a physical device.
+    try {
+      if (Platform.isAndroid) {
+        return "http://10.0.2.2:8000";
+      }
+    } catch (_) {
+      // Platform may not be available in some contexts; fall through
+    }
+    return "http://127.0.0.1:8000";
   }
 
   // -----------------------------
