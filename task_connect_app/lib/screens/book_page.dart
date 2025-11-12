@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart' show kIsWeb; 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 // import 'package:http/http.dart' as http; // We no longer need this
@@ -7,6 +6,7 @@ import 'package:task_connect_app/models/service_provider.dart';
 // --- 1. IMPORT YOUR API SERVICE ---
 import 'package:task_connect_app/services/api_service.dart'; 
 // ---------------------------------
+import 'package:task_connect_app/screens/api_config.dart';
 
 class BookPage extends StatefulWidget {
   final ServiceProviderModel provider;
@@ -26,7 +26,7 @@ class _BookPageState extends State<BookPage> {
 
   // --- 2. GET THE BASE URL (for images) ---
   String get _baseUrl {
-    return kIsWeb ? "http://127.0.0.1:8000" : "http://10.0.2.2:8000";
+    return ApiConfig.publicBaseUrl;
   }
   // ------------------------------------
 

@@ -1,7 +1,7 @@
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:task_connect_app/services/api_service.dart';
+import 'package:task_connect_app/screens/api_config.dart';
 
 class ProviderManagePhotosScreen extends StatefulWidget {
   const ProviderManagePhotosScreen({super.key});
@@ -19,7 +19,7 @@ class _ProviderManagePhotosScreenState
 
   // Get the base URL for displaying images
   String get _baseUrl {
-    return kIsWeb ? "http://127.0.0.1:8000" : "http://10.0.2.2:8000";
+    return ApiConfig.publicBaseUrl;
   }
 
   @override

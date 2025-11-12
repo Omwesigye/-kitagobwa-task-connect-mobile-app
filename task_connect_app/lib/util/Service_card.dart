@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
+import 'package:task_connect_app/screens/api_config.dart';
 
 class ServiceCard extends StatelessWidget {
   final String providerImagePath;
@@ -22,12 +23,27 @@ class ServiceCard extends StatelessWidget {
     final textColor = theme.textTheme.bodyLarge?.color ?? Colors.black;
     final subTextColor = theme.textTheme.bodySmall?.color ?? Colors.grey;
 
-    // Resolve full image URL if a relative path is provided
+    // Resolve full image URL - backend should return full URLs, but handle both cases
     final String resolvedImageUrl = () {
       if (providerImagePath.isEmpty) return '';
-      if (providerImagePath.startsWith('http')) return providerImagePath;
-      final String baseUrl = kIsWeb ? 'http://127.0.0.1:8000' : 'http://10.0.2.2:8000';
-      return '$baseUrl/storage/$providerImagePath';
+      
+      // If it's already a full URL (starts with http:// or https://), use it directly
+      if (providerImagePath.startsWith('http://') || providerImagePath.startsWith('https://')) {
+        return _normalizeAbsoluteUrl(providerImagePath);
+      }
+      
+      // If it starts with /storage/, it's a relative path from the backend root
+      if (providerImagePath.startsWith('/storage/')) {
+        return '${ApiConfig.publicBaseUrl}$providerImagePath';
+      }
+      
+      // If it's a storage path like "provider-photos/...", construct the URL
+      if (providerImagePath.contains('provider-photos/') || providerImagePath.contains('reports/')) {
+        return '${ApiConfig.publicBaseUrl}/storage/$providerImagePath';
+      }
+      
+      // Legacy: if it's just a filename, try the public/images path
+      return '${ApiConfig.publicBaseUrl}/storage/$providerImagePath';
     }();
 
     return Container(
@@ -128,4 +144,26 @@ class ServiceCard extends StatelessWidget {
       ),
     );
   }
+}
+
+String _normalizeAbsoluteUrl(String url) {
+  final uri = Uri.tryParse(url);
+  if (uri == null || !uri.hasScheme || !uri.hasAuthority) {
+    return url;
+  }
+
+  final host = uri.host.toLowerCase();
+  if (host == 'localhost' || host == '127.0.0.1') {
+    final base = Uri.parse(ApiConfig.publicBaseUrl);
+    return Uri(
+      scheme: base.scheme,
+      host: base.host,
+      port: base.hasPort ? base.port : null,
+      path: uri.path,
+      query: uri.query.isEmpty ? null : uri.query,
+      fragment: uri.fragment.isEmpty ? null : uri.fragment,
+    ).toString();
+  }
+
+  return url;
 }

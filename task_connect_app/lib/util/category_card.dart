@@ -15,33 +15,27 @@ class CategoryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    // Light/Dark adaptive background
-    final cardColor = theme.brightness == Brightness.dark
-        ? Colors.deepPurple[700]
-        : Colors.deepOrangeAccent[500];
-
-    final textColor = theme.brightness == Brightness.dark
-        ? Colors.white
-        : Colors.black87;
+    final colorScheme = theme.colorScheme;
+    final isLight = theme.brightness == Brightness.light;
 
     return Padding(
       padding: const EdgeInsets.only(left: 25.0),
       child: GestureDetector(
         onTap: onTap,
         child: Container(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           decoration: BoxDecoration(
-            color: cardColor,
+            color: isLight ? Colors.white : colorScheme.surface,
             borderRadius: BorderRadius.circular(12),
-            boxShadow: onTap != null
-                ? [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
-                      blurRadius: 4,
-                      offset: const Offset(0, 2),
-                    ),
-                  ]
-                : null,
+            boxShadow: [
+              BoxShadow(
+                color: isLight
+                    ? Colors.black.withOpacity(0.05)
+                    : Colors.black.withOpacity(0.3),
+                blurRadius: 6,
+                offset: const Offset(0, 3),
+              ),
+            ],
           ),
           child: Row(
             children: [
@@ -49,7 +43,10 @@ class CategoryCard extends StatelessWidget {
               const SizedBox(width: 10),
               Text(
                 categoryName,
-                style: TextStyle(color: textColor, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  color: colorScheme.onSurface,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ],
           ),

@@ -9,57 +9,68 @@ class WelcomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
 
     return Scaffold(
-      backgroundColor: theme.scaffoldBackgroundColor,
-      body: SingleChildScrollView(
-        child: ConstrainedBox(
-          constraints: BoxConstraints(
-            minHeight: MediaQuery.of(context).size.height,
+      body: Container(
+        width: double.infinity,
+        height: double.infinity,
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Color(0xFFB3E5FC), // light sky blue
+              Color.fromARGB(255, 170, 198, 218), // softer fade
+            ],
           ),
+        ),
+        child: SafeArea(
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Top welcome text
+              // IMAGE ------------------------------
               Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 40,
-                  vertical: 40,
+                padding: const EdgeInsets.symmetric(horizontal: 40),
+                child: Image.asset(
+                  'assets/images/welcome.png',
+                  height: 240,
+                  fit: BoxFit.contain,
                 ),
-                child: Center(
-                  child: RichText(
-                    textAlign: TextAlign.center,
-                    text: TextSpan(
-                      children: [
-                        TextSpan(
-                          text: "Welcome to the Task Connect App \n",
-                          style: theme.textTheme.headlineMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: theme.textTheme.headlineMedium?.color,
-                          ),
+              ),
+
+              const SizedBox(height: 30),
+
+              // TITLE + SUBTITLE -------------------
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 40),
+                child: RichText(
+                  textAlign: TextAlign.center,
+                  text: TextSpan(
+                    children: [
+                      TextSpan(
+                        text: "Welcome to Task Connect\n\n",
+                        style: theme.textTheme.headlineMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black87,
                         ),
-                        TextSpan(
-                          text: "Enter personal details to your account",
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: colorScheme.primary,
-                          ),
+                      ),
+                      TextSpan(
+                        text: "services next to your door step.",
+                        style: theme.textTheme.titleLarge?.copyWith(
+                          color: Colors.blue[700],
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
               ),
 
-              // Bottom buttons
+              const SizedBox(height: 60),
+
+              // BUTTONS ----------------------------
               Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 30,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
                     Expanded(
                       child: WelcomeButton(
@@ -72,8 +83,8 @@ class WelcomeScreen extends StatelessWidget {
                             ),
                           );
                         },
-                        color: Colors.transparent,
-                        textColor: theme.colorScheme.onPrimaryContainer,
+                        color: Colors.white,
+                        textColor: Colors.black87,
                       ),
                     ),
                     const SizedBox(width: 20),
@@ -88,13 +99,15 @@ class WelcomeScreen extends StatelessWidget {
                             ),
                           );
                         },
-                        color: Colors.transparent,
-                        textColor: theme.colorScheme.onPrimaryContainer,
+                        color: Colors.black54,
+                        textColor: Colors.white,
                       ),
                     ),
                   ],
                 ),
               ),
+
+              const SizedBox(height: 50),
             ],
           ),
         ),

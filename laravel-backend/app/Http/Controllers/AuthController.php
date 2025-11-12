@@ -7,14 +7,17 @@ use App\Models\User;
 use App\Models\ServiceProvider;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Storage;
 
 class AuthController extends Controller
 {
     // Register user or service provider
     public function register(Request $request)
     {
-        // --- THIS IS YOUR CORRECT, EXISTING CODE ---
-        $validator = Validator::make($request->all(), [
+        // Determine validation rules based on whether files are being uploaded
+        $hasFiles = $request->hasFile('images');
+        
+        $rules = [
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users',
             'password' => 'required|min:6',
@@ -26,10 +29,26 @@ class AuthController extends Controller
             'telnumber' => 'required_if:role,service_provider|string',
             'service' => 'required_if:role,service_provider|string',
             'description' => 'nullable|string',
-            // Optional images list (filenames/paths) provided at registration time
-            'images' => 'nullable|array',
-            'images.*' => 'string',
-        ]);
+        ];
+
+        // Require images for service providers
+        if ($request->role === 'service_provider') {
+            if ($hasFiles) {
+                // If files are being uploaded, validate them
+                $rules['images'] = 'required|array|min:1';
+                $rules['images.*'] = 'required|image|mimes:jpeg,png,jpg,gif|max:2048'; // 2MB max per image
+            } else {
+                // For service providers, require at least one image (legacy support)
+                $rules['images'] = 'required|array|min:1';
+                $rules['images.*'] = 'required|string';
+            }
+        } else {
+            // Regular users don't need images
+            $rules['images'] = 'nullable|array';
+            $rules['images.*'] = 'nullable|string';
+        }
+
+        $validator = Validator::make($request->all(), $rules);
 
         if ($validator->fails()) {
             return response()->json([
@@ -57,9 +76,24 @@ class AuthController extends Controller
                 'description' => $request->description,
             ]);
 
-            // Set images after create to avoid mass-assignment issues
-            if (is_array($request->images) && !empty($request->images)) {
-                $provider->images = $request->images;
+            // Handle image uploads
+            $imagePaths = [];
+            
+            if ($hasFiles && $request->hasFile('images')) {
+                // Handle file uploads
+                foreach ($request->file('images') as $image) {
+                    // Store in storage/app/public/provider-photos
+                    $path = $image->store('provider-photos', 'public');
+                    $imagePaths[] = $path;
+                }
+            } elseif (is_array($request->images) && !empty($request->images)) {
+                // Legacy support: if images are provided as array of strings (filenames)
+                $imagePaths = $request->images;
+            }
+
+            // Save image paths to database
+            if (!empty($imagePaths)) {
+                $provider->images = $imagePaths;
                 $provider->save();
             }
         }
@@ -71,7 +105,7 @@ class AuthController extends Controller
         ], 201);
     }
 
-    // Login endpoint (handles both user & service provider)
+    // Login endpoint (handles user, service provider, and admin)
     public function login(Request $request)
     {
         $user = User::where('email', $request->email)->first();
@@ -80,8 +114,8 @@ class AuthController extends Controller
             return response()->json(['message' => 'User not found'], 404);
         }
 
-        if ($user->role === 'user') {
-            // Normal email + password login
+        if ($user->role === 'user' || $user->role === 'admin') {
+            // Normal email + password login for users and admins
             if (!Hash::check($request->password, $user->password)) {
                 return response()->json(['message' => 'Invalid credentials'], 401);
             }

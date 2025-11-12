@@ -62,11 +62,33 @@ class AdminService {
   Future<List<dynamic>> _getList(String url, String type) async {
     try {
       final res = await http.get(Uri.parse(url), headers: _baseHeaders);
-      if (res.statusCode == 200) return json.decode(res.body);
-      throw Exception('Failed to fetch $type');
+      print("Fetching $type: Status ${res.statusCode}");
+      print("Response body: ${res.body}");
+      
+      if (res.statusCode == 200) {
+        final decoded = json.decode(res.body);
+        // Handle both array and object with data key
+        if (decoded is List) {
+          return decoded;
+        } else if (decoded is Map && decoded.containsKey('data')) {
+          return decoded['data'] as List;
+        }
+        return decoded;
+      } else if (res.statusCode == 403) {
+        throw Exception('Unauthorized: Admin access required');
+      } else if (res.statusCode == 401) {
+        throw Exception('Unauthenticated: Please login again');
+      } else {
+        try {
+          final errorBody = json.decode(res.body);
+          throw Exception(errorBody['message'] ?? 'Failed to fetch $type (${res.statusCode})');
+        } catch (_) {
+          throw Exception('Failed to fetch $type (${res.statusCode}): ${res.body}');
+        }
+      }
     } catch (e) {
       print("Error fetching $type: $e");
-      return [];
+      rethrow; // Re-throw so calling code can handle it
     }
   }
 
