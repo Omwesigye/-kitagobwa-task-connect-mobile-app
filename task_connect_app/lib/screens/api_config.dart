@@ -107,4 +107,16 @@ class ApiConfig {
   static String postLocation() => "$baseUrl/location";
   static String getLocations() => "$baseUrl/locations";
   static String nearbyProviders() => "$baseUrl/providers/nearby";
+
+  // -----------------------------
+  // PAYPAL CONFIGURATION
+  // -----------------------------
+  static const String paypalClientId = String.fromEnvironment(
+    'PAYPAL_CLIENT_ID',
+    defaultValue: '',
+  );
+  static const String paypalSecret = String.fromEnvironment(
+    'PAYPAL_SECRET',
+    defaultValue: '',
+  );
 }

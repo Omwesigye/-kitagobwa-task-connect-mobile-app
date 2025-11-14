@@ -8,7 +8,8 @@ import 'package:flutter/foundation.dart';
 // ----------------------------------
 
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:image_picker/image_picker.dart'; 
+import 'package:image_picker/image_picker.dart';
+import 'package:task_connect_app/screens/api_config.dart'; 
 
 class ApiService {
   static String get _baseUrl {
@@ -297,6 +298,95 @@ static Future<BookingModel> declineBooking(int bookingId) async {
       }
     } else {
       throw Exception('Failed to load ratings (${response.statusCode})');
+    }
+  }
+
+  // -----------------------------
+  // PAYPAL PAYMENT METHODS
+  // -----------------------------
+  
+  /// Get PayPal access token using client credentials from environment variables
+  static Future<String> getPayPalAccessToken() async {
+    final clientId = ApiConfig.paypalClientId;
+    final secret = ApiConfig.paypalSecret;
+    
+    if (clientId.isEmpty || secret.isEmpty) {
+      throw Exception('PayPal credentials not configured. Please set PAYPAL_CLIENT_ID and PAYPAL_SECRET environment variables.');
+    }
+    
+    final credentials = base64Encode(utf8.encode('$clientId:$secret'));
+    final response = await http.post(
+      Uri.parse('https://api-m.sandbox.paypal.com/v1/oauth2/token'),
+      headers: {
+        'Authorization': 'Basic $credentials',
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: 'grant_type=client_credentials',
+    );
+    
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return data['access_token'];
+    } else {
+      throw Exception('Failed to get PayPal access token: ${response.body}');
+    }
+  }
+  
+  /// Create a PayPal payment order
+  static Future<Map<String, dynamic>> createPayPalPayment({
+    required double amount,
+    required String currency,
+    required String description,
+  }) async {
+    final accessToken = await getPayPalAccessToken();
+    
+    final response = await http.post(
+      Uri.parse('https://api-m.sandbox.paypal.com/v2/checkout/orders'),
+      headers: {
+        'Authorization': 'Bearer $accessToken',
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode({
+        'intent': 'CAPTURE',
+        'purchase_units': [
+          {
+            'amount': {
+              'currency_code': currency,
+              'value': amount.toStringAsFixed(2),
+            },
+            'description': description,
+          }
+        ],
+        'application_context': {
+          'return_url': 'https://example.com/return',
+          'cancel_url': 'https://example.com/cancel',
+        }
+      }),
+    );
+    
+    if (response.statusCode == 201) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Failed to create PayPal payment: ${response.body}');
+    }
+  }
+  
+  /// Capture a PayPal payment
+  static Future<Map<String, dynamic>> capturePayPalPayment(String orderId) async {
+    final accessToken = await getPayPalAccessToken();
+    
+    final response = await http.post(
+      Uri.parse('https://api-m.sandbox.paypal.com/v2/checkout/orders/$orderId/capture'),
+      headers: {
+        'Authorization': 'Bearer $accessToken',
+        'Content-Type': 'application/json',
+      },
+    );
+    
+    if (response.statusCode == 201) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Failed to capture PayPal payment: ${response.body}');
     }
   }
 }
