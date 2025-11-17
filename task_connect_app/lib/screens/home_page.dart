@@ -71,7 +71,7 @@ class _HomePageState extends State<HomePage> {
                   ],
                 )
               : null,
-          color: !isLight ? colorScheme.background : null,
+          color: !isLight ? colorScheme.surface : null,
         ),
         child: SafeArea(
           child: (isLoading || isLoadingUser)
@@ -133,7 +133,7 @@ class _HomePageState extends State<HomePage> {
                                         color: colorScheme.secondary,
                                         shape: BoxShape.circle,
                                         border: Border.all(
-                                          color: colorScheme.background,
+                                          color: colorScheme.surface,
                                           width: 2,
                                         ),
                                       ),
@@ -239,7 +239,7 @@ class _HomePageState extends State<HomePage> {
                         child: Container(
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
-                            color: colorScheme.surfaceVariant,
+                            color: colorScheme.surfaceContainerHighest,
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: TextField(

@@ -31,43 +31,40 @@ class ServiceProviderController extends Controller
                 $images = $provider->images;
             }
 
-            // Convert image paths to full URLs
-            // Images can be stored in storage (provider-photos/...) or public/images
+            // ✅ FIXED: Return RELATIVE paths only, let Flutter handle the base URL
             $provider->images = array_map(function ($img) {
-                // If it's already a full URL, return as is
+                // If it's already a full URL, strip it to relative path
                 if (filter_var($img, FILTER_VALIDATE_URL)) {
-                    return $img;
+                    // Extract just the path part after the domain
+                    $parsed = parse_url($img);
+                    $path = $parsed['path'] ?? '';
+                    // Remove leading slash if present
+                    return ltrim($path, '/');
                 }
                 
-                // Get the base URL from config
-                $baseUrl = config('app.url');
-                // Fallback to request if config is not set
-                if (empty($baseUrl) || $baseUrl === 'http://localhost') {
-                    $baseUrl = request()->getSchemeAndHttpHost();
+                // If it starts with /storage/, remove the leading slash
+                if (strpos($img, '/storage/') === 0) {
+                    return ltrim($img, '/');
                 }
                 
-                // Check if it's a storage path (starts with provider-photos/)
+                // Check 1: New system images (e.g., "provider-photos/new.jpg")
                 if (strpos($img, 'provider-photos/') === 0) {
-                    // Storage::url returns /storage/provider-photos/...
-                    $storageUrl = Storage::url($img);
-                    // Ensure we return a full URL
-                    return rtrim($baseUrl, '/') . $storageUrl;
+                    return 'storage/' . $img;
                 }
                 
-                // Legacy support: if it's just a filename, try public/images first
-                $publicPath = public_path('images/' . $img);
-                if (file_exists($publicPath)) {
-                    return rtrim($baseUrl, '/') . '/images/' . $img;
+                // Check 2: Old system images (e.g., "plumber.jpg")
+                if (file_exists(public_path('images/' . $img))) {
+                    return 'images/' . $img;
                 }
                 
-                // Try storage (for any other storage path)
+                // Fallback for any other path in storage
                 if (Storage::disk('public')->exists($img)) {
-                    $storageUrl = Storage::url($img);
-                    return rtrim($baseUrl, '/') . $storageUrl;
+                    return 'storage/' . $img;
                 }
                 
-                // Fallback to old API route
-                return rtrim($baseUrl, '/') . '/api/image/' . $img;
+                // If file is not found, return as-is
+                return $img;
+
             }, $images);
 
             return $provider;

@@ -321,8 +321,9 @@ class _AdminHomeState extends State<AdminHome>
 
   // ---------------- TAB WIDGETS ----------------
   Widget _buildUsersTab() {
-    if (tabLoading['users']!)
+    if (tabLoading['users']!) {
       return const Center(child: CircularProgressIndicator());
+    }
     if (users.isEmpty) return const Center(child: Text("No users available"));
 
     return ListView.separated(
@@ -380,10 +381,12 @@ class _AdminHomeState extends State<AdminHome>
   }
 
   Widget _buildPendingProvidersTab() {
-    if (tabLoading['pendingProviders']!)
+    if (tabLoading['pendingProviders']!) {
       return const Center(child: CircularProgressIndicator());
-    if (pendingProviders.isEmpty)
+    }
+    if (pendingProviders.isEmpty) {
       return const Center(child: Text("No pending providers"));
+    }
 
     return ListView.separated(
       padding: const EdgeInsets.all(12),
@@ -456,10 +459,12 @@ class _AdminHomeState extends State<AdminHome>
   }
 
   Widget _buildAllProvidersTab() {
-    if (tabLoading['allProviders']!)
+    if (tabLoading['allProviders']!) {
       return const Center(child: CircularProgressIndicator());
-    if (allProviders.isEmpty)
+    }
+    if (allProviders.isEmpty) {
       return const Center(child: Text("No providers available"));
+    }
 
     return ListView.separated(
       padding: const EdgeInsets.all(12),
@@ -522,10 +527,12 @@ class _AdminHomeState extends State<AdminHome>
   }
 
   Widget _buildBookingsTab() {
-    if (tabLoading['bookings']!)
+    if (tabLoading['bookings']!) {
       return const Center(child: CircularProgressIndicator());
-    if (bookings.isEmpty)
+    }
+    if (bookings.isEmpty) {
       return const Center(child: Text("No bookings available"));
+    }
 
     return ListView.separated(
       padding: const EdgeInsets.all(12),

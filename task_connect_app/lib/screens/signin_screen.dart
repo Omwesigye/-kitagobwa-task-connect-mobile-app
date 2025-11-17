@@ -209,7 +209,7 @@ class _SigninScreenState extends State<SigninScreen> {
                         children: [
                           // Role selection
                           DropdownButtonFormField<String>(
-                            value: selectedRole,
+                            initialValue: selectedRole,
                             decoration: const InputDecoration(
                               labelText: 'Login as',
                               border: OutlineInputBorder(

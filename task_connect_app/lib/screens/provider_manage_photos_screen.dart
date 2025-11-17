@@ -127,8 +127,17 @@ class _ProviderManagePhotosScreenState
             ),
             itemCount: photos.length,
             itemBuilder: (context, index) {
-              final imageUrl = '$_baseUrl/storage/${photos[index]}';
-              final filename = photos[index];
+              // --- THIS IS THE FIX ---
+final filename = photos[index];
+
+// Check if the path is from the "New System" (starts with 'provider-photos/')
+final bool isNewStorage = filename.startsWith('provider-photos/');
+
+// Build the correct URL based on the system
+final String imageUrl = isNewStorage
+    ? '$_baseUrl/storage/$filename'  // NEW SYSTEM URL
+    : '$_baseUrl/images/$filename';   // OLD SYSTEM URL
+// ----------------------
 
               return Stack(
                 fit: StackFit.expand,
