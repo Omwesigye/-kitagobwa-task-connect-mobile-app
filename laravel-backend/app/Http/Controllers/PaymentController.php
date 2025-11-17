@@ -16,6 +16,7 @@ class PaymentController extends Controller
     {
         return response()->json([
             'client_id' => env('PAYPAL_SANDBOX_CLIENT_ID'),
+            'client_secret' => env('PAYPAL_SANDBOX_CLIENT_SECRET'),
             'mode' => env('PAYPAL_MODE', 'sandbox'),
             'currency' => env('PAYPAL_CURRENCY', 'USD'),
         ]);

@@ -50,6 +50,9 @@ Route::get('/image/{path}', [ServiceProviderController::class, 'showImage'])
 Route::post('/chat/send', [ChatController::class, 'sendMessage']);
 Route::get('/chat/history/{userId}/{contactId}', [ChatController::class, 'getConversation']);
 
+// Public PayPal config (no secrets exposed)
+Route::get('/payments/paypal-config', [PaymentController::class, 'getPayPalConfig']);
+
 
 // --------------------
 // PROTECTED ROUTES (auth:sanctum)
@@ -91,7 +94,6 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // --------------------
     // PAYMENT ROUTES
-        Route::get('/payments/paypal-config', [PaymentController::class, 'getPayPalConfig']);
     // --------------------
     Route::post('/payments/process', [PaymentController::class, 'processPayment']);
     Route::get('/payments/status/{bookingId}', [PaymentController::class, 'getPaymentStatus']);

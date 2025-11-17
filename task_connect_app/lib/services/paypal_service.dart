@@ -4,6 +4,7 @@ import 'api_service.dart';
 
 class PayPalService {
   static String? _clientId;
+  static String? _clientSecret;
   static String? _mode;
   static String? _currency;
 
@@ -12,9 +13,10 @@ class PayPalService {
     try {
       final config = await ApiService.getPayPalConfig();
       _clientId = config['client_id'];
+      _clientSecret = config['client_secret'];
       _mode = config['mode'] ?? 'sandbox';
       _currency = config['currency'] ?? 'USD';
-      return _clientId != null && _clientId!.isNotEmpty;
+      return _clientId != null && _clientId!.isNotEmpty && _clientSecret != null && _clientSecret!.isNotEmpty;
     } catch (e) {
       debugPrint('Error fetching PayPal config: $e');
       return false;
@@ -44,7 +46,7 @@ class PayPalService {
           builder: (BuildContext context) => PaypalCheckoutView(
             sandboxMode: _mode == 'sandbox',
             clientId: _clientId,
-            secretKey: '', // Secret is only used server-side
+            secretKey: _clientSecret,
             transactions: [
               {
                 "amount": {
@@ -96,6 +98,6 @@ class PayPalService {
 
   /// Validates if PayPal credentials are configured
   static bool isConfigured() {
-    return _clientId != null && _clientId!.isNotEmpty;
+    return _clientId != null && _clientId!.isNotEmpty && _clientSecret != null && _clientSecret!.isNotEmpty;
   }
 }

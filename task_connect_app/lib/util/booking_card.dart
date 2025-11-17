@@ -149,19 +149,22 @@ class _BookingsCardState extends State<BookingsCard> {
 
   // --- ADD PAYMENT PROCESSING FUNCTION ---
   Future<void> _handlePayment() async {
-    if (!PayPalService.isConfigured()) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('PayPal is not configured. Please contact support.'),
-          backgroundColor: Colors.orange,
-        ),
-      );
-      return;
-    }
-
     setState(() => _isProcessingPayment = true);
 
     try {
+      // Ensure PayPal config is loaded from backend
+      final initialized = await PayPalService.initialize();
+      if (!initialized || !PayPalService.isConfigured()) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('PayPal is not configured. Please contact support.'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+        return;
+      }
+
       final amount = widget.amount ?? 50.0; // Default amount if not set
       
       final result = await PayPalService.makePayment(
