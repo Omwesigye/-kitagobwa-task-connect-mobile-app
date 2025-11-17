@@ -11,6 +11,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:image_picker/image_picker.dart'; 
 
 class ApiService {
+  static const Map<String, String> _publicJsonHeaders = {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+  };
+
   static String get _baseUrl {
     // 'kIsWeb' will now be correctly found from the foundation.dart import
     return kIsWeb ? "http://127.0.0.1:8000/api" : "http://10.0.2.2:8000/api";
@@ -300,6 +305,7 @@ static Future<BookingModel> declineBooking(int bookingId) async {
     }
   }
 
+
   // --------------------
   // PAYMENT METHODS
     static Future<Map<String, dynamic>> getPayPalConfig() async {
@@ -369,5 +375,62 @@ static Future<BookingModel> declineBooking(int bookingId) async {
       throw Exception('Failed to get payment status (${response.statusCode})');
     }
   }
+
+  static Future<void> requestPasswordReset(String email) async {
+    final response = await http.post(
+      Uri.parse('$_baseUrl/password/forgot'),
+      headers: _publicJsonHeaders,
+      body: jsonEncode({'email': email}),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception(_extractMessage(response.body, 'Unable to request reset.'));
+    }
+  }
+
+  static Future<void> verifyResetCode(String email, String code) async {
+    final response = await http.post(
+      Uri.parse('$_baseUrl/password/verify'),
+      headers: _publicJsonHeaders,
+      body: jsonEncode({'email': email, 'code': code}),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception(_extractMessage(response.body, 'Invalid or expired code.'));
+    }
+  }
+
+  static Future<void> resetPassword(
+    String email,
+    String code,
+    String password,
+    String confirmPassword,
+  ) async {
+    final response = await http.post(
+      Uri.parse('$_baseUrl/password/reset'),
+      headers: _publicJsonHeaders,
+      body: jsonEncode({
+        'email': email,
+        'code': code,
+        'password': password,
+        'password_confirmation': confirmPassword,
+      }),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception(_extractMessage(response.body, 'Unable to reset password.'));
+    }
+  }
+
+  static String _extractMessage(String body, String fallback) {
+    try {
+      final data = jsonDecode(body);
+      if (data is Map && data['message'] is String) {
+        return data['message'] as String;
+      }
+    } catch (_) {}
+    return fallback;
+  }
+
 }
 
