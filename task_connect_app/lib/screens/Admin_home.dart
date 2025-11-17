@@ -208,6 +208,28 @@ class _AdminHomeState extends State<AdminHome>
 
   @override
   Widget build(BuildContext context) {
+    final tabBar = TabBar(
+      controller: _tabController,
+      tabs: [
+        Tab(
+          icon: const Icon(Icons.people),
+          text: 'Users (${users.length})',
+        ),
+        Tab(
+          icon: const Icon(Icons.hourglass_bottom),
+          text: 'Pending (${pendingProviders.length})',
+        ),
+        Tab(
+          icon: const Icon(Icons.badge),
+          text: 'Providers (${allProviders.length})',
+        ),
+        Tab(
+          icon: const Icon(Icons.event_note),
+          text: 'Bookings (${bookings.length})',
+        ),
+      ],
+    );
+
     return Scaffold(
       drawer: Drawer(
         child: SafeArea(
@@ -271,26 +293,13 @@ class _AdminHomeState extends State<AdminHome>
             onPressed: _logout,
           ),
         ],
-        bottom: TabBar(
-          controller: _tabController,
-          tabs: [
-            Tab(
-              icon: const Icon(Icons.people),
-              text: 'Users (${users.length})',
-            ),
-            Tab(
-              icon: const Icon(Icons.hourglass_bottom),
-              text: 'Pending (${pendingProviders.length})',
-            ),
-            Tab(
-              icon: const Icon(Icons.badge),
-              text: 'Providers (${allProviders.length})',
-            ),
-            Tab(
-              icon: const Icon(Icons.event_note),
-              text: 'Bookings (${bookings.length})',
-            ),
-          ],
+      ),
+      bottomNavigationBar: Material(
+        elevation: 8,
+        color: Theme.of(context).colorScheme.surface,
+        child: SafeArea(
+          top: false,
+          child: tabBar,
         ),
       ),
       body: Container(

@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:task_connect_app/main_navigation_screen.dart';
 import 'package:task_connect_app/screens/admin_home.dart';
 import 'package:task_connect_app/screens/provider_navigation_screen.dart';
+import 'package:task_connect_app/screens/forgot_password_screen.dart';
 
 
 class SigninScreen extends StatefulWidget {
@@ -84,6 +85,10 @@ class _SigninScreenState extends State<SigninScreen> {
               ? user['role'].toString()
               : 'user';
           final String? token = data['token'] as String?;
+          final String? userName = user?['name']?.toString() ??
+              user?['full_name']?.toString() ??
+              user?['fullName']?.toString();
+          final String? userEmail = user?['email']?.toString();
 
           if (userId == null || token == null) {
             if (!mounted) return;
@@ -101,6 +106,14 @@ class _SigninScreenState extends State<SigninScreen> {
           await prefs.setString('userRole', userRole);
           await prefs.setString('auth_token', token);
           await prefs.setString('user_id', userId.toString());
+          if (userName != null && userName.isNotEmpty) {
+            await prefs.setString('userName', userName);
+          } else {
+            await prefs.remove('userName');
+          }
+          if (userEmail != null && userEmail.isNotEmpty) {
+            await prefs.setString('userEmail', userEmail);
+          }
 
           if (!mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(
@@ -268,6 +281,21 @@ class _SigninScreenState extends State<SigninScreen> {
                               },
                             ),
                             const SizedBox(height: 20),
+                            Align(
+                              alignment: Alignment.centerRight,
+                              child: TextButton(
+                                onPressed: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => const ForgotPasswordScreen(),
+                                    ),
+                                  );
+                                },
+                                child: const Text('Forgot password?'),
+                              ),
+                            ),
+                            const SizedBox(height: 10),
                           ],
 
                           // Login code for service provider
