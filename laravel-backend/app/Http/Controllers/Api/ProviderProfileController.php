@@ -31,6 +31,7 @@ class ProviderProfileController extends Controller
             'location' => $provider->location,
             'telnumber' => $provider->telnumber,
             'description' => $provider->description,
+            'service_fee' => $provider->service_fee,
         ]);
     }
 
@@ -52,6 +53,7 @@ class ProviderProfileController extends Controller
             'location' => 'required|string|max:255',
             'telnumber' => 'required|string|max:20',
             'description' => 'required|string|min:10',
+            'service_fee' => 'nullable|numeric|min:0|max:10000',
         ]);
 
         // 1. Update the User model (for name)
@@ -64,6 +66,7 @@ class ProviderProfileController extends Controller
             'location' => $validated['location'],
             'telnumber' => $validated['telnumber'],
             'description' => $validated['description'],
+            'service_fee' => $validated['service_fee'] ?? $provider->service_fee,
         ]);
 
         return response()->json(['message' => 'Profile updated successfully!']);

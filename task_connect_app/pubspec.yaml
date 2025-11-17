@@ -27,6 +27,8 @@ dependencies:
   latlong2: ^0.9.1
   geolocator: ^11.0.0
   pusher_channels_flutter: ^2.1.3
+  flutter_paypal_payment: ^1.0.1 # <-- Added for PayPal payments
+  webview_flutter: ^4.4.2 # <-- Required for PayPal
   
 
 

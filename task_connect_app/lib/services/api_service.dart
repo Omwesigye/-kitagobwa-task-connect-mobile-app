@@ -305,6 +305,77 @@ static Future<BookingModel> declineBooking(int bookingId) async {
     }
   }
 
+
+  // --------------------
+  // PAYMENT METHODS
+    static Future<Map<String, dynamic>> getPayPalConfig() async {
+      final response = await http.get(
+        Uri.parse('$_baseUrl/payments/paypal-config'),
+        headers: {'Accept': 'application/json'},
+      );
+
+      if (response.statusCode == 200) {
+        try {
+          return jsonDecode(response.body);
+        } catch (e) {
+          throw Exception('Invalid JSON response from server');
+        }
+      } else {
+        throw Exception('Failed to get PayPal config (${response.statusCode})');
+      }
+    }
+
+  // --------------------
+  
+  static Future<Map<String, dynamic>> processPayment({
+    required int bookingId,
+    required double amount,
+    required String paymentMethod,
+    String? paypalOrderId,
+    String? paypalPayerId,
+  }) async {
+    final headers = await _getHeaders();
+    final response = await http.post(
+      Uri.parse('$_baseUrl/payments/process'),
+      headers: headers,
+      body: jsonEncode({
+        'booking_id': bookingId,
+        'amount': amount,
+        'payment_method': paymentMethod,
+        'paypal_order_id': paypalOrderId,
+        'paypal_payer_id': paypalPayerId,
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      try {
+        return jsonDecode(response.body);
+      } catch (e) {
+        throw Exception('Invalid JSON response from server. The server may have returned an HTML error page.');
+      }
+    } else {
+      throw Exception('Failed to process payment (${response.statusCode}): ${response.body}');
+    }
+  }
+
+  static Future<Map<String, dynamic>> getPaymentStatus(int bookingId) async {
+    final headers = await _getHeaders();
+    final response = await http.get(
+      Uri.parse('$_baseUrl/payments/status/$bookingId'),
+      headers: headers,
+    );
+
+    if (response.statusCode == 200) {
+      try {
+        return jsonDecode(response.body);
+      } catch (e) {
+        throw Exception('Invalid JSON response from server. The server may have returned an HTML error page.');
+      }
+    } else {
+      throw Exception('Failed to get payment status (${response.statusCode})');
+    }
+  }
+
   static Future<void> requestPasswordReset(String email) async {
     final response = await http.post(
       Uri.parse('$_baseUrl/password/forgot'),
@@ -360,5 +431,6 @@ static Future<BookingModel> declineBooking(int bookingId) async {
     } catch (_) {}
     return fallback;
   }
+
 }
 

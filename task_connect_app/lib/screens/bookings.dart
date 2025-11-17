@@ -95,6 +95,10 @@ class _BookingsScreenState extends State<BookingsScreen> {
                         time: b.time,
                         userStatus: b.userStatus,
                         providerStatus: b.providerStatus,
+                        
+                        // Payment data
+                        amount: b.amount,
+                        paymentStatus: b.paymentStatus,
                       );
                     },
                   ),

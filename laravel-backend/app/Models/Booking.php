@@ -17,7 +17,13 @@ class Booking extends Model
         'time',
         'date',
         'user_status',
-        'provider_status'
+        'provider_status',
+        'amount',
+        'payment_status',
+        'payment_method',
+        'paypal_order_id',
+        'paypal_payer_id',
+        'paid_at'
     ];
 
     // Booking belongs to a user

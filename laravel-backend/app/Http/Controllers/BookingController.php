@@ -26,6 +26,12 @@ class BookingController extends Controller
             'provider_image_url' => 'nullable|string',
         ]);
 
+        // Get the service provider to get the service fee
+        $serviceProvider = \App\Models\ServiceProvider::find($validated['provider_id']);
+        $amount = $serviceProvider && $serviceProvider->service_fee 
+            ? $serviceProvider->service_fee 
+            : 50.00; // Default amount if no service fee is set
+
         // Create booking with default statuses
         $booking = Booking::create([
             'user_id' => auth()->id(), // Get the logged-in user's ID
@@ -38,6 +44,8 @@ class BookingController extends Controller
             'provider_image_url' => $validated['provider_image_url'],
             'user_status' => 'pending',
             'provider_status' => 'pending',
+            'amount' => $amount,
+            'payment_status' => 'pending',
         ]);
 
         return response()->json([

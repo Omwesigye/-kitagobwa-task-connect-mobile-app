@@ -17,6 +17,7 @@ class ServiceProvider extends Model
         'telnumber',
         'service',
         'description',
+        'service_fee',
         'rating',
         'latitude',
         'longitude'
