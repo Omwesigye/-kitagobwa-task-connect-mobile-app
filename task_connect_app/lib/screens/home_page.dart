@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:task_connect_app/models/service_provider.dart';
-import 'package:task_connect_app/models/user.dart';
 import 'package:task_connect_app/screens/settings_screen.dart';
 import 'package:task_connect_app/screens/provider_list_screen.dart';
 import 'package:task_connect_app/services/api_service.dart';
@@ -18,7 +18,7 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   List<ServiceProviderModel> providers = [];
-  User? currentUser;
+  String? currentUserName;
   bool isLoading = true;
   bool isLoadingUser = true;
 
@@ -26,7 +26,7 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     _fetchProviders();
-    isLoadingUser = false;
+    _loadCurrentUser();
   }
 
   Future<void> _fetchProviders() async {
@@ -42,6 +42,16 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  Future<void> _loadCurrentUser() async {
+    final prefs = await SharedPreferences.getInstance();
+    final storedName = prefs.getString('userName');
+    if (!mounted) return;
+    setState(() {
+      currentUserName = storedName;
+      isLoadingUser = false;
+    });
+  }
+
   void _openCategoryPage(BuildContext context, String category) {
     Navigator.push(
       context,
@@ -55,6 +65,8 @@ class _HomePageState extends State<HomePage> {
     final colorScheme = theme.colorScheme;
     final textTheme = theme.textTheme;
     final isLight = theme.brightness == Brightness.light;
+    final displayName =
+        (currentUserName?.trim().isNotEmpty ?? false) ? currentUserName!.trim().toLowerCase() : "user";
 
     return Scaffold(
       body: Container(
@@ -93,7 +105,7 @@ class _HomePageState extends State<HomePage> {
                                 Text("hello", style: textTheme.bodyMedium),
                                 const SizedBox(height: 8),
                                 Text(
-                                  currentUser?.fullName.toLowerCase() ?? "user",
+                                  displayName,
                                   style: textTheme.titleMedium?.copyWith(
                                     fontWeight: FontWeight.bold,
                                   ),
