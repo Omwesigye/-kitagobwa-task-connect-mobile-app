@@ -6,6 +6,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\ServiceProviderController;
+use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\Api\ReportController;
 use App\Http\Controllers\Api\RatingController;
 use App\Http\Controllers\Api\ChatController;
@@ -87,6 +88,14 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/bookings/{id}/accept', [BookingController::class, 'acceptBooking']);
     Route::post('/bookings/{id}/decline', [BookingController::class, 'declineBooking']);
     Route::post('/bookings/{id}/complete', [BookingController::class, 'completeBooking']);
+
+    // --------------------
+    // PAYMENT ROUTES
+        Route::get('/payments/paypal-config', [PaymentController::class, 'getPayPalConfig']);
+    // --------------------
+    Route::post('/payments/process', [PaymentController::class, 'processPayment']);
+    Route::get('/payments/status/{bookingId}', [PaymentController::class, 'getPaymentStatus']);
+    Route::put('/payments/status/{bookingId}', [PaymentController::class, 'updatePaymentStatus']);
 
     // --------------------
     // PROVIDER PROFILE ROUTES

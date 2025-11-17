@@ -19,6 +19,7 @@ class _ProviderEditProfileScreenState extends State<ProviderEditProfileScreen> {
   final TextEditingController _locationController = TextEditingController();
   final TextEditingController _telnumberController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
+  final TextEditingController _serviceFeeController = TextEditingController();
 
   @override
   void initState() {
@@ -36,6 +37,7 @@ class _ProviderEditProfileScreenState extends State<ProviderEditProfileScreen> {
         _locationController.text = profileData['location'] ?? '';
         _telnumberController.text = profileData['telnumber'] ?? '';
         _descriptionController.text = profileData['description'] ?? '';
+        _serviceFeeController.text = profileData['service_fee']?.toString() ?? '';
         _isLoading = false;
       });
     } catch (e) {
@@ -61,6 +63,7 @@ class _ProviderEditProfileScreenState extends State<ProviderEditProfileScreen> {
         'location': _locationController.text,
         'telnumber': _telnumberController.text,
         'description': _descriptionController.text,
+        'service_fee': _serviceFeeController.text,
       };
 
       await ApiService.updateProviderProfile(profileData);
@@ -147,6 +150,33 @@ class _ProviderEditProfileScreenState extends State<ProviderEditProfileScreen> {
                         maxLines: 5,
                         validator: (value) =>
                             value!.length < 10 ? 'Description is too short (min 10 chars)' : null,
+                      ),
+                      const SizedBox(height: 16),
+                      TextFormField(
+                        controller: _serviceFeeController,
+                        decoration: const InputDecoration(
+                          labelText: 'Service Fee (USD)',
+                          hintText: 'e.g., 50.00',
+                          prefixText: '\$ ',
+                          helperText: 'This amount will be charged to customers',
+                        ),
+                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter your service fee';
+                          }
+                          final fee = double.tryParse(value);
+                          if (fee == null) {
+                            return 'Please enter a valid number';
+                          }
+                          if (fee < 0) {
+                            return 'Service fee cannot be negative';
+                          }
+                          if (fee > 10000) {
+                            return 'Service fee seems too high';
+                          }
+                          return null;
+                        },
                       ),
                       const SizedBox(height: 24),
                       ElevatedButton(
