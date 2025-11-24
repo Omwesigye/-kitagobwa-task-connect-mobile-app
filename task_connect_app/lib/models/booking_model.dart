@@ -19,7 +19,15 @@ class BookingModel {
   
   // --- 1. ADD THE USER FIELD ---
   // This will hold the nested user object (e.g., {"id": 1, "name": "Swale"})
-  final Map<String, dynamic>? user; 
+  final Map<String, dynamic>? user;
+  
+  // --- PAYMENT FIELDS ---
+  final double? amount;
+  final String paymentStatus; // pending, completed, failed
+  final String? paymentMethod; // paypal, card, etc
+  final String? paypalOrderId;
+  final String? paypalPayerId;
+  final String? paidAt;
 
   BookingModel({
     this.id,
@@ -35,6 +43,12 @@ class BookingModel {
     required this.providerStatus,
     // --- 2. ADD TO CONSTRUCTOR ---
     this.user,
+    this.amount,
+    this.paymentStatus = 'pending',
+    this.paymentMethod,
+    this.paypalOrderId,
+    this.paypalPayerId,
+    this.paidAt,
   });
 
   factory BookingModel.fromJson(Map<String, dynamic> json) {
@@ -56,6 +70,13 @@ class BookingModel {
       providerStatus: json['provider_status'] ?? 'pending',
       // --- 3. PARSE THE NESTED USER OBJECT ---
       user: json['user'] != null ? json['user'] as Map<String, dynamic> : null,
+      // --- PARSE PAYMENT FIELDS ---
+      amount: json['amount'] != null ? double.tryParse(json['amount'].toString()) : null,
+      paymentStatus: json['payment_status'] ?? 'pending',
+      paymentMethod: json['payment_method'],
+      paypalOrderId: json['paypal_order_id'],
+      paypalPayerId: json['paypal_payer_id'],
+      paidAt: json['paid_at'],
     );
   }
 

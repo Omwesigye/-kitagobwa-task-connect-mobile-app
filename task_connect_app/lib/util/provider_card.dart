@@ -1,11 +1,8 @@
 import 'package:flutter/material.dart';
-// 1. --- ADD CHAT SCREEN IMPORT ---
 import 'package:task_connect_app/screens/chat_screen.dart';
-import 'package:flutter/foundation.dart' show kIsWeb; // For image URL logic
 import 'package:task_connect_app/screens/api_config.dart';
 
 class ProviderCard extends StatelessWidget {
-  // Your existing fields
   final String name;
   final String service;
   final String telnumber;
@@ -15,12 +12,9 @@ class ProviderCard extends StatelessWidget {
   final bool isSaved;
   final Function(bool) onSaveToggle;
   final VoidCallback onBook;
-
-  // --- 2. ADD THE NEW FIELDS (from provider_list_screen) ---
   final int loggedInUserId;
   final int providerUserId;
   final String providerName;
-  // --------------------------------------------------------
 
   const ProviderCard({
     super.key,
@@ -33,17 +27,13 @@ class ProviderCard extends StatelessWidget {
     required this.isSaved,
     required this.onSaveToggle,
     required this.onBook,
-    // --- 3. ADD TO CONSTRUCTOR ---
     required this.loggedInUserId,
     required this.providerUserId,
     required this.providerName,
   });
-  // -----------------------------
 
-  // --- 4. ADD THE NAVIGATION FUNCTION ---
   void _openChat(BuildContext context) {
     if (providerUserId == 0) {
-      // This happens if the user_id wasn't in the API response
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Could not find provider to chat with.')),
       );
@@ -61,27 +51,49 @@ class ProviderCard extends StatelessWidget {
       ),
     );
   }
-  // ------------------------------------
 
-  // --- Helper to fix image URLs ---
   String _getImageUrl(String imageUrl) {
-    if (imageUrl.startsWith('http')) {
-      return _normalizeAbsoluteUrl(imageUrl); // Already a full URL
+    // If it's already a full URL, normalize it for the current platform
+    if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
+      return _normalizeUrl(imageUrl);
     }
-    // Use centralized public base URL
-    return '${ApiConfig.publicBaseUrl}/storage/$imageUrl';
+    
+    // For relative paths from Laravel (e.g., "storage/provider-photos/abc.jpg")
+    // Just prepend the base URL
+    return '${ApiConfig.publicBaseUrl}/$imageUrl';
+  }
+
+  // Normalize URLs to work with current platform (Android uses 10.0.2.2, Web uses localhost)
+  String _normalizeUrl(String url) {
+    final uri = Uri.tryParse(url);
+    if (uri == null) return url;
+
+    final host = uri.host.toLowerCase();
+    
+    // Replace localhost/127.0.0.1/10.0.2.2 with the correct host for this platform
+    if (host == 'localhost' || host == '127.0.0.1' || host == '10.0.2.2') {
+      final base = Uri.parse(ApiConfig.publicBaseUrl);
+      return Uri(
+        scheme: base.scheme,
+        host: base.host,
+        port: base.hasPort ? base.port : null,
+        path: uri.path,
+        query: uri.query.isEmpty ? null : uri.query,
+      ).toString();
+    }
+
+    return url;
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    // This is the new UI layout that includes the chat button
     return Card(
       color: Colors.white,
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      clipBehavior: Clip.antiAlias, // Ensures image respects the border
+      clipBehavior: Clip.antiAlias,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -93,14 +105,42 @@ class ProviderCard extends StatelessWidget {
               width: double.infinity,
               fit: BoxFit.cover,
               errorBuilder: (context, error, stackTrace) {
+                print('❌ Image load error: $error');
+                print('❌ Attempted URL: ${_getImageUrl(images[0])}');
                 return Container(
                   height: 150,
                   width: double.infinity,
-                  color: theme.colorScheme.surfaceVariant,
-                  child: Icon(
-                    Icons.broken_image,
-                    color: theme.colorScheme.onSurfaceVariant,
-                    size: 40,
+                  color: theme.colorScheme.surfaceContainerHighest,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.broken_image,
+                        color: theme.colorScheme.onSurfaceVariant,
+                        size: 40,
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Image failed to load',
+                        style: theme.textTheme.bodySmall,
+                      ),
+                    ],
+                  ),
+                );
+              },
+              loadingBuilder: (context, child, loadingProgress) {
+                if (loadingProgress == null) return child;
+                return Container(
+                  height: 150,
+                  width: double.infinity,
+                  color: theme.colorScheme.surfaceContainerHighest,
+                  child: Center(
+                    child: CircularProgressIndicator(
+                      value: loadingProgress.expectedTotalBytes != null
+                          ? loadingProgress.cumulativeBytesLoaded /
+                              loadingProgress.expectedTotalBytes!
+                          : null,
+                    ),
                   ),
                 );
               },
@@ -140,7 +180,6 @@ class ProviderCard extends StatelessWidget {
                       color: theme.colorScheme.onSurface,
                       size: 16,
                     ),
-
                     const SizedBox(width: 4),
                     Text(telnumber, style: theme.textTheme.bodyMedium),
                   ],
@@ -162,18 +201,14 @@ class ProviderCard extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                // --- 5. THIS IS THE NEW CHAT BUTTON ---
                 IconButton(
                   icon: Icon(
                     Icons.chat_bubble_outline,
                     color: theme.colorScheme.primary,
                   ),
-                  onPressed: () => _openChat(context), // Call the chat function
+                  onPressed: () => _openChat(context),
                   tooltip: 'Chat with $name',
                 ),
-                // ------------------------------------
-
-                // SAVE BUTTON
                 IconButton(
                   icon: Icon(
                     isSaved ? Icons.bookmark : Icons.bookmark_border,
@@ -182,15 +217,13 @@ class ProviderCard extends StatelessWidget {
                   onPressed: () => onSaveToggle(!isSaved),
                   tooltip: 'Save Provider',
                 ),
-
-                // BOOK BUTTON
                 ElevatedButton(
                   onPressed: onBook,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: theme.colorScheme.primary,
                     foregroundColor: theme.colorScheme.onPrimary,
                   ),
-                  child: const Text('viewDetails'),
+                  child: const Text('View Details'),
                 ),
               ],
             ),
@@ -199,26 +232,4 @@ class ProviderCard extends StatelessWidget {
       ),
     );
   }
-}
-
-String _normalizeAbsoluteUrl(String url) {
-  final uri = Uri.tryParse(url);
-  if (uri == null || !uri.hasScheme || !uri.hasAuthority) {
-    return url;
-  }
-
-  final host = uri.host.toLowerCase();
-  if (host == 'localhost' || host == '127.0.0.1') {
-    final base = Uri.parse(ApiConfig.publicBaseUrl);
-    return Uri(
-      scheme: base.scheme,
-      host: base.host,
-      port: base.hasPort ? base.port : null,
-      path: uri.path,
-      query: uri.query.isEmpty ? null : uri.query,
-      fragment: uri.fragment.isEmpty ? null : uri.fragment,
-    ).toString();
-  }
-
-  return url;
 }

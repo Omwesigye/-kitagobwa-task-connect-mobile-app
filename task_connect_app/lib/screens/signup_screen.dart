@@ -225,7 +225,7 @@ class _SignUpScreenState extends State<SignUpScreen> with TickerProviderStateMix
                         children: [
                           // Role selection
                           DropdownButtonFormField<String>(
-                            value: selectedRole,
+                            initialValue: selectedRole,
                             decoration: const InputDecoration(
                               labelText: 'Register as',
                               border: OutlineInputBorder(

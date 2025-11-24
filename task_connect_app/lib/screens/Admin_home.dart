@@ -208,6 +208,28 @@ class _AdminHomeState extends State<AdminHome>
 
   @override
   Widget build(BuildContext context) {
+    final tabBar = TabBar(
+      controller: _tabController,
+      tabs: [
+        Tab(
+          icon: const Icon(Icons.people),
+          text: 'Users (${users.length})',
+        ),
+        Tab(
+          icon: const Icon(Icons.hourglass_bottom),
+          text: 'Pending (${pendingProviders.length})',
+        ),
+        Tab(
+          icon: const Icon(Icons.badge),
+          text: 'Providers (${allProviders.length})',
+        ),
+        Tab(
+          icon: const Icon(Icons.event_note),
+          text: 'Bookings (${bookings.length})',
+        ),
+      ],
+    );
+
     return Scaffold(
       drawer: Drawer(
         child: SafeArea(
@@ -271,26 +293,13 @@ class _AdminHomeState extends State<AdminHome>
             onPressed: _logout,
           ),
         ],
-        bottom: TabBar(
-          controller: _tabController,
-          tabs: [
-            Tab(
-              icon: const Icon(Icons.people),
-              text: 'Users (${users.length})',
-            ),
-            Tab(
-              icon: const Icon(Icons.hourglass_bottom),
-              text: 'Pending (${pendingProviders.length})',
-            ),
-            Tab(
-              icon: const Icon(Icons.badge),
-              text: 'Providers (${allProviders.length})',
-            ),
-            Tab(
-              icon: const Icon(Icons.event_note),
-              text: 'Bookings (${bookings.length})',
-            ),
-          ],
+      ),
+      bottomNavigationBar: Material(
+        elevation: 8,
+        color: Theme.of(context).colorScheme.surface,
+        child: SafeArea(
+          top: false,
+          child: tabBar,
         ),
       ),
       body: Container(
@@ -321,8 +330,9 @@ class _AdminHomeState extends State<AdminHome>
 
   // ---------------- TAB WIDGETS ----------------
   Widget _buildUsersTab() {
-    if (tabLoading['users']!)
+    if (tabLoading['users']!) {
       return const Center(child: CircularProgressIndicator());
+    }
     if (users.isEmpty) return const Center(child: Text("No users available"));
 
     return ListView.separated(
@@ -380,10 +390,12 @@ class _AdminHomeState extends State<AdminHome>
   }
 
   Widget _buildPendingProvidersTab() {
-    if (tabLoading['pendingProviders']!)
+    if (tabLoading['pendingProviders']!) {
       return const Center(child: CircularProgressIndicator());
-    if (pendingProviders.isEmpty)
+    }
+    if (pendingProviders.isEmpty) {
       return const Center(child: Text("No pending providers"));
+    }
 
     return ListView.separated(
       padding: const EdgeInsets.all(12),
@@ -434,7 +446,7 @@ class _AdminHomeState extends State<AdminHome>
                   ],
                 ),
               ),
-              ButtonBar(
+              OverflowBar(
                 children: [
                   TextButton.icon(
                     onPressed: () => approveProvider(provider['id']),
@@ -456,10 +468,12 @@ class _AdminHomeState extends State<AdminHome>
   }
 
   Widget _buildAllProvidersTab() {
-    if (tabLoading['allProviders']!)
+    if (tabLoading['allProviders']!) {
       return const Center(child: CircularProgressIndicator());
-    if (allProviders.isEmpty)
+    }
+    if (allProviders.isEmpty) {
       return const Center(child: Text("No providers available"));
+    }
 
     return ListView.separated(
       padding: const EdgeInsets.all(12),
@@ -522,10 +536,12 @@ class _AdminHomeState extends State<AdminHome>
   }
 
   Widget _buildBookingsTab() {
-    if (tabLoading['bookings']!)
+    if (tabLoading['bookings']!) {
       return const Center(child: CircularProgressIndicator());
-    if (bookings.isEmpty)
+    }
+    if (bookings.isEmpty) {
       return const Center(child: Text("No bookings available"));
+    }
 
     return ListView.separated(
       padding: const EdgeInsets.all(12),

@@ -8,9 +8,15 @@ use App\Models\ServiceProvider;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
+// --- 1. ADD THESE IMPORTS ---
+use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\ProviderOTPMail;
+// ----------------------------
 
 class AuthController extends Controller
 {
+    // --- 2. KEEPING YOUR TEAM'S register FUNCTION ---
     // Register user or service provider
     public function register(Request $request)
     {
@@ -63,7 +69,8 @@ class AuthController extends Controller
             'email' => $request->email,
             'password' => Hash::make($request->password),
             'role' => $request->role,
-            // 'is_approved' will be 0 by default
+            // 'is_approved' will be 0 by default for provider, 1 for user (from migration)
+            'is_approved' => $request->role == 'user' ? 1 : 0, 
         ]);
 
         if ($request->role === 'service_provider') {
@@ -104,51 +111,63 @@ class AuthController extends Controller
             'user' => $user
         ], 201);
     }
+    // --- END OF YOUR register FUNCTION ---
 
-    // Login endpoint (handles user, service provider, and admin)
+
+    // --- 3. REPLACING WITH THE CORRECTED login FUNCTION ---
+    /**
+     * Log in a user.
+     */
     public function login(Request $request)
     {
-        $user = User::where('email', $request->email)->first();
+        // This validation checks the 'role' from Flutter
+        $fields = $request->validate([
+            'email' => 'required|string|email',
+            'password' => 'required_if:role,user,admin|string|nullable',
+            'login_code' => 'required_if:role,service_provider|string|nullable',
+            'role' => 'required|string|in:user,service_provider,admin', // Add 'admin'
+        ]);
 
-        if (!$user) {
-            return response()->json(['message' => 'User not found'], 404);
+        // Find the user by email
+        $user = User::where('email', $fields['email'])->first();
+
+        // Check if user exists AND if their database role matches the role they are logging in as
+        if (!$user || $user->role !== $fields['role']) {
+            return response(['message' => 'Invalid credentials or role mismatch'], 401);
         }
 
-        if ($user->role === 'user' || $user->role === 'admin') {
-            // Normal email + password login for users and admins
-            if (!Hash::check($request->password, $user->password)) {
-                return response()->json(['message' => 'Invalid credentials'], 401);
+        // Check credentials based on role
+        if ($fields['role'] == 'user' || $fields['role'] == 'admin') {
+            // User or Admin: Check password
+            if (!Hash::check($fields['password'], $user->password)) {
+                return response(['message' => 'Invalid credentials'], 401);
+            }
+        } else if ($fields['role'] == 'service_provider') {
+            // Service Provider: Check login code
+            if (!$user->login_code || $user->login_code !== $fields['login_code']) {
+                return response(['message' => 'Invalid login code'], 401);
+            }
+            
+            // Check if provider is approved
+            if ($user->is_approved == 0) {
+                return response(['message' => 'Your account is not yet approved'], 401);
             }
         }
 
-        if ($user->role === 'service_provider') {
-            // Service provider login with code
-            if (!$user->is_approved) {
-                return response()->json(['message' => 'Your account is not yet approved'], 403);
-            }
-
-            if (!isset($request->login_code) || $user->login_code !== $request->login_code) {
-                return response()->json(['message' => 'Invalid login code'], 401);
-            }
-
-            // --- 
-            // --- THIS IS THE FIX: We comment out these two lines ---
-            // Clear login code after use
-            // $user->login_code = null;
-            // $user->save();
-            // ---
-        }
-
+        // Credentials are correct, create token
         $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json([
             'message' => 'Login successful',
             'token' => $token,
-            'role' => $user->role,
+            'role' => $user->role, // Send the role back
             'user' => $user,
-        ]);
+        ], 200);
     }
+    // --- END OF CORRECTED login FUNCTION ---
 
+
+    // --- 4. KEEPING YOUR TEAM'S logout FUNCTION ---
     // Optional logout
     public function logout(Request $request)
     {
@@ -156,4 +175,3 @@ class AuthController extends Controller
         return response()->json(['message' => 'Logged out successfully.']);
     }
 }
-

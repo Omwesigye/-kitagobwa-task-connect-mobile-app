@@ -49,8 +49,9 @@ class AdminService {
         headers: _jsonHeaders,
         body: json.encode({'status': status}),
       );
-      if (res.statusCode != 200)
+      if (res.statusCode != 200) {
         throw Exception('Failed to update booking status');
+      }
     } catch (e) {
       print("Error updating booking status: $e");
       rethrow;

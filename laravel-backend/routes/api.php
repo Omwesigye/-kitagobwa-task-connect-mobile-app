@@ -6,17 +6,20 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\ServiceProviderController;
+use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\Api\ReportController;
 use App\Http\Controllers\Api\RatingController;
 use App\Http\Controllers\Api\ChatController;
 use App\Http\Controllers\Api\ProviderProfileController;
-use App\Http\Controllers\Api\LocationController;
+use App\Http\Controllers\PasswordResetController;
 
 /*
 |--------------------------------------------------------------------------
 | API Routes
 |--------------------------------------------------------------------------
-| Public and Protected API endpoints
+|
+| Public + Protected Routes for the API
+|
 */
 
 // --------------------
@@ -25,21 +28,24 @@ use App\Http\Controllers\Api\LocationController;
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 
+// Password Reset
+Route::post('/password/forgot', [PasswordResetController::class, 'requestCode']);
+Route::post('/password/verify', [PasswordResetController::class, 'verifyCode']);
+Route::post('/password/reset', [PasswordResetController::class, 'resetPassword']);
+
+// Reports & Ratings
 Route::post('/reports', [ReportController::class, 'store']);
 Route::post('/ratings', [RatingController::class, 'store']);
-// Live locations (public GET, POST may be protected later)
-Route::get('/locations', [LocationController::class, 'index']);
-Route::middleware('auth:sanctum')->group(function () {
-    Route::post('/location', [LocationController::class, 'store']);
-    Route::get('/providers/nearby', [LocationController::class, 'nearbyProviders']);
-});
 
+// Providers
 Route::get('/service-providers', [ServiceProviderController::class, 'index']);
 Route::get('/providers', [ServiceProviderController::class, 'index']); // Alias
+
+// Image fetch (wildcard path)
 Route::get('/image/{path}', [ServiceProviderController::class, 'showImage'])
     ->where('path', '.*');
 
-// Chat (public send + view conversation)
+// Chat Public
 Route::post('/chat/send', [ChatController::class, 'sendMessage']);
 Route::get('/chat/history/{userId}/{contactId}', [ChatController::class, 'getConversation']);
 
@@ -51,13 +57,11 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Authentication
     Route::post('/logout', [AuthController::class, 'logout']);
-  
 
-    // --------------------
     // ADMIN ROUTES
-    // --------------------
     Route::prefix('admin')->group(function () {
         Route::get('/reports', [ReportController::class, 'index']);
+
         Route::get('/pending-providers', [AdminController::class, 'pendingProviders']);
         Route::post('/approve-provider/{id}', [AdminController::class, 'approveProvider']);
 
@@ -71,9 +75,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/bookings/{id}/status', [AdminController::class, 'updateBookingStatus']);
     });
 
-    // --------------------
     // BOOKING ROUTES
-    // --------------------
     Route::post('/bookings', [BookingController::class, 'store']);
     Route::get('/bookings', [BookingController::class, 'index']);
     Route::delete('/bookings/{id}', [BookingController::class, 'destroy']);
@@ -82,9 +84,18 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/bookings/{id}/decline', [BookingController::class, 'declineBooking']);
     Route::post('/bookings/{id}/complete', [BookingController::class, 'completeBooking']);
 
+
     // --------------------
+    // PAYMENT ROUTES
+        Route::get('/payments/paypal-config', [PaymentController::class, 'getPayPalConfig']);
+    // --------------------
+    Route::post('/payments/process', [PaymentController::class, 'processPayment']);
+    Route::get('/payments/status/{bookingId}', [PaymentController::class, 'getPaymentStatus']);
+    Route::put('/payments/status/{bookingId}', [PaymentController::class, 'updatePaymentStatus']);
+
+    // --------------------
+
     // PROVIDER PROFILE ROUTES
-    // --------------------
     Route::get('/provider/profile', [ProviderProfileController::class, 'show']);
     Route::post('/provider/profile', [ProviderProfileController::class, 'update']);
 
@@ -94,8 +105,6 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/provider/ratings', [ProviderProfileController::class, 'getRatings']);
 
-    // --------------------
     // CHAT ROUTES
-    // --------------------
     Route::get('/chat/conversations', [ChatController::class, 'getConversations']);
 });

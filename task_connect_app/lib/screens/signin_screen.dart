@@ -4,8 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:task_connect_app/main_navigation_screen.dart';
-import 'package:task_connect_app/screens/Admin_home.dart';
+import 'package:task_connect_app/screens/admin_home.dart';
 import 'package:task_connect_app/screens/provider_navigation_screen.dart';
+import 'package:task_connect_app/screens/forgot_password_screen.dart';
+
 
 class SigninScreen extends StatefulWidget {
   const SigninScreen({super.key});
@@ -15,6 +17,7 @@ class SigninScreen extends StatefulWidget {
 }
 
 class _SigninScreenState extends State<SigninScreen> {
+  // --- 1. ADD THESE MISSING VARIABLE DECLARATIONS ---
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
   final TextEditingController emailController = TextEditingController();
@@ -24,10 +27,13 @@ class _SigninScreenState extends State<SigninScreen> {
   String selectedRole = 'user';
   bool hidePassword = true;
   bool isLoading = false;
+  // ---------------------------------------------------
 
   Future<void> loginUser() async {
     if (!_formKey.currentState!.validate()) return;
 
+    // Add mounted check
+    if (!mounted) return;
     setState(() => isLoading = true);
 
     final Map<String, dynamic> body = {
@@ -55,6 +61,10 @@ class _SigninScreenState extends State<SigninScreen> {
         body: jsonEncode(body),
       );
 
+      // Add mounted check
+      if (!mounted) return;
+      final data = jsonDecode(response.body);
+
       if (response.statusCode == 200) {
         try {
           final Map<String, dynamic> data = (jsonDecode(response.body) as Map)
@@ -75,6 +85,10 @@ class _SigninScreenState extends State<SigninScreen> {
               ? user['role'].toString()
               : 'user';
           final String? token = data['token'] as String?;
+          final String? userName = user?['name']?.toString() ??
+              user?['full_name']?.toString() ??
+              user?['fullName']?.toString();
+          final String? userEmail = user?['email']?.toString();
 
           if (userId == null || token == null) {
             if (!mounted) return;
@@ -92,6 +106,14 @@ class _SigninScreenState extends State<SigninScreen> {
           await prefs.setString('userRole', userRole);
           await prefs.setString('auth_token', token);
           await prefs.setString('user_id', userId.toString());
+          if (userName != null && userName.isNotEmpty) {
+            await prefs.setString('userName', userName);
+          } else {
+            await prefs.remove('userName');
+          }
+          if (userEmail != null && userEmail.isNotEmpty) {
+            await prefs.setString('userEmail', userEmail);
+          }
 
           if (!mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(
@@ -200,7 +222,7 @@ class _SigninScreenState extends State<SigninScreen> {
                         children: [
                           // Role selection
                           DropdownButtonFormField<String>(
-                            value: selectedRole,
+                            initialValue: selectedRole,
                             decoration: const InputDecoration(
                               labelText: 'Login as',
                               border: OutlineInputBorder(
@@ -259,6 +281,21 @@ class _SigninScreenState extends State<SigninScreen> {
                               },
                             ),
                             const SizedBox(height: 20),
+                            Align(
+                              alignment: Alignment.centerRight,
+                              child: TextButton(
+                                onPressed: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => const ForgotPasswordScreen(),
+                                    ),
+                                  );
+                                },
+                                child: const Text('Forgot password?'),
+                              ),
+                            ),
+                            const SizedBox(height: 10),
                           ],
 
                           // Login code for service provider
