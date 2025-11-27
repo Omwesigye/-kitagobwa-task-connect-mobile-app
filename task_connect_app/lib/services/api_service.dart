@@ -270,6 +270,19 @@ class ApiService {
   // ------------------------
   // PAYPAL PAYMENT METHODS
   // ------------------------
+  static Future<Map<String, dynamic>> getPayPalConfig() async {
+    final response = await http.get(
+      Uri.parse('$_baseUrl/payments/paypal-config'),
+      headers: _publicJsonHeaders,
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Failed to load PayPal config (${response.statusCode})');
+    }
+  }
+
   static Future<String> getPayPalAccessToken() async {
     final clientId = ApiConfig.paypalClientId;
     final secret = ApiConfig.paypalSecret;
