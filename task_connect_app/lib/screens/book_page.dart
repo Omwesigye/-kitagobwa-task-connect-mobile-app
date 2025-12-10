@@ -37,7 +37,7 @@ class _BookPageState extends State<BookPage> {
       firstDate: DateTime.now(),
       lastDate: DateTime(2100),
     );
-    if (picked != null) setState(() => _selectedDate = picked);
+    setState(() => _selectedDate = picked);
   }
 
   void _pickTime() async {
